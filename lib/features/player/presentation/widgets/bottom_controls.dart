@@ -136,55 +136,24 @@ class _BottomControlsState extends State<BottomControls> {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              _UtilityButton(
-                icon: _aspectRatioIcon(widget.aspectRatioLabel),
-                onPressed: widget.onCycleAspectRatio,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.onPrevious != null) ...[
-                      _TransportButton(
-                        icon: Icons.skip_previous_rounded,
-                        onPressed: widget.onPrevious!,
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-                    _TransportButton(
-                      icon: widget.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      onPressed: widget.onTogglePlayPause,
-                      emphasized: true,
-                    ),
-                    if (widget.onNext != null) ...[
-                      const SizedBox(width: 12),
-                      _TransportButton(
-                        icon: Icons.skip_next_rounded,
-                        onPressed: widget.onNext!,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _UtilityButton(
-                icon: widget.isFullscreen
-                    ? Icons.fullscreen_exit
-                    : Icons.fullscreen,
-                onPressed: widget.onToggleFullscreen,
-              ),
-              if (widget.showPipButton && widget.onTogglePip != null) ...[
-                const SizedBox(width: 8),
-                _UtilityButton(
-                  icon: Icons.picture_in_picture_alt_rounded,
-                  onPressed: widget.onTogglePip!,
-                ),
-              ],
+              _UtilityButton(icon: _aspectRatioIcon(widget.aspectRatioLabel),
+                onPressed: widget.onCycleAspectRatio),
+              if (widget.onPrevious != null) _TransportButton(
+                icon: Icons.skip_previous_rounded, onPressed: widget.onPrevious!),
+              _TransportButton(icon: widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                onPressed: widget.onTogglePlayPause, emphasized: true),
+              if (widget.onNext != null) _TransportButton(
+                icon: Icons.skip_next_rounded, onPressed: widget.onNext!),
+              _UtilityButton(icon: widget.isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                onPressed: widget.onToggleFullscreen),
+              if (widget.showPipButton && widget.onTogglePip != null) _UtilityButton(
+                icon: Icons.picture_in_picture_alt_rounded, onPressed: widget.onTogglePip!),
             ],
           ),
         ],

@@ -35,6 +35,10 @@ void main() {
   testWidgets(
       'tab changes and route replacement keep one visible player and restore the session',
       (tester) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final videos = List.generate(
         3,
         (i) => VideoFile(
