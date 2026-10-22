@@ -45,8 +45,8 @@ class ShareDownloadService : Service() {
                 NOTIFICATION_ID,
                 NotificationHelper.buildProgressNotification(
                     context = this,
-                    title = "Starting download",
-                    text = "Preparing MPx share download...",
+                    title = appString(R.string.download_starting),
+                    text = appString(R.string.share_preparing),
                     progress = 0,
                     indeterminate = true,
                 ),
@@ -76,6 +76,7 @@ class ShareDownloadService : Service() {
                     DownloaderPythonBridge.cookiesPath(appContext),
                     notifier,
                     token,
+                    AppLanguageResources.languageCode(appContext),
                 ).toString()
                 Log.d("ShareDownloadService", "Download completed: $finalPath")
 
@@ -86,31 +87,31 @@ class ShareDownloadService : Service() {
                 )
 
                 ShareDownloadRegistry.registerCompleted(
-                    appContext, url, "Shared Video", exportedPath, true, null
+                    appContext, url, "", exportedPath, true, null
                 )
 
                 NotificationHelper.showFinishedNotification(
                     context = appContext,
-                    title = "Download complete",
-                    text = "Saved to $exportedPath",
+                    title = appContext.appString(R.string.download_complete),
+                    text = appContext.appString(R.string.saved_to, exportedPath),
                     success = true,
                 )
-                showToast(appContext, "Saved to $exportedPath")
+                showToast(appContext, appContext.appString(R.string.saved_to, exportedPath))
             } catch (error: Exception) {
                 Log.e("ShareDownloadService", "Download failed", error)
-                val errorMessage = error.message ?: "Unable to download shared video"
+                val errorMessage = error.message ?: appContext.appString(R.string.share_unable_to_download)
 
                 ShareDownloadRegistry.registerCompleted(
-                    appContext, url, "Shared Video", "", false, errorMessage
+                    appContext, url, "", "", false, errorMessage
                 )
 
                 NotificationHelper.showFinishedNotification(
                     context = appContext,
-                    title = "Download failed",
+                    title = appContext.appString(R.string.download_failed),
                     text = errorMessage,
                     success = false,
                 )
-                showToast(appContext, "Download failed: $errorMessage")
+                showToast(appContext, appContext.appString(R.string.download_failed_detail, errorMessage))
             } finally {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -155,8 +156,8 @@ private class ServiceProgressEmitter(private val context: Context) {
         val secondary = listOfNotNull(speedText, etaText).joinToString(" - ")
         NotificationHelper.updateProgressNotification(
             context = context,
-            title = if (value >= 100) "Finalizing download" else "Downloading shared video",
-            text = secondary.ifEmpty { logLine ?: "Working..." },
+            title = if (value >= 100) context.appString(R.string.download_finalizing) else context.appString(R.string.share_downloading),
+            text = secondary.ifEmpty { logLine ?: context.appString(R.string.working) },
             progress = value,
             indeterminate = value == 0,
         )
@@ -165,7 +166,6 @@ private class ServiceProgressEmitter(private val context: Context) {
 
 private object NotificationHelper {
     private const val CHANNEL_ID = "share_downloads"
-    private const val CHANNEL_NAME = "MPx Downloads"
     private const val NOTIFICATION_ID = 44041
 
     fun ensureChannel(context: Context) {
@@ -175,10 +175,10 @@ private object NotificationHelper {
         val manager = context.getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.appString(R.string.download_channel_name),
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "Shows MPx shared download progress"
+            description = context.appString(R.string.download_channel_description)
         }
         manager.createNotificationChannel(channel)
     }

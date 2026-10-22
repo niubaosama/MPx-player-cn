@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class HomeEmptyState extends StatelessWidget {
   final VoidCallback onTryRefresh;
@@ -21,7 +22,7 @@ class HomeEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'No videos found',
+            context.tr('No videos found'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -30,7 +31,7 @@ class HomeEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Pull down to scan for videos',
+            context.tr('Pull down to scan for videos'),
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade500,
@@ -40,7 +41,7 @@ class HomeEmptyState extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onTryRefresh,
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('Try refresh Page'),
+            label: Text(context.tr('Try refresh Page')),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,

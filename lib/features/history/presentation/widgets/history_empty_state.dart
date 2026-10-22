@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class HistoryEmptyState extends StatelessWidget {
@@ -32,7 +33,7 @@ class HistoryEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Watch History',
+              context.tr('No Watch History'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -41,7 +42,7 @@ class HistoryEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Videos you play will appear here',
+              context.tr('Videos you play will appear here'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -53,7 +54,7 @@ class HistoryEmptyState extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onBrowseVideos,
                 icon: const Icon(Icons.video_library_outlined),
-                label: const Text('Browse Videos'),
+                label: Text(context.tr('Browse Videos')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade500,
                   foregroundColor: Colors.white,

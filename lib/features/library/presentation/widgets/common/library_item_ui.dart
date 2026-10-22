@@ -1,15 +1,17 @@
+import 'package:flutter/widgets.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../domain/entities/file_item.dart';
 import '../../../domain/entities/video_file.dart';
 
 class LibraryItemUi {
-  static String relativeDate(DateTime date) {
+  static String relativeDate(BuildContext context, DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inDays == 0) return 'today';
-    if (diff.inDays == 1) return 'yesterday';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
-    return '${(diff.inDays / 365).floor()}y ago';
+    if (diff.inDays == 0) return context.tr('today');
+    if (diff.inDays == 1) return context.tr('yesterday');
+    if (diff.inDays < 7) return context.tr('{value0}d ago', {'value0': diff.inDays});
+    if (diff.inDays < 30) return context.tr('{value0}w ago', {'value0': diff.inDays ~/ 7});
+    if (diff.inDays < 365) return context.tr('{value0}mo ago', {'value0': diff.inDays ~/ 30});
+    return context.tr('{value0}y ago', {'value0': diff.inDays ~/ 365});
   }
 
   static String parentFolderName(String path) {
@@ -28,11 +30,11 @@ class LibraryItemUi {
     return path.substring(0, lastSeparator);
   }
 
-  static String folderVideoLabel(int? count) {
+  static String folderVideoLabel(BuildContext context, int? count) {
     if (count == null) {
-      return 'Folder';
+      return context.tr('Folder');
     }
-    return count == 1 ? '1 video' : '$count videos';
+    return count == 1 ? context.tr('1 video') : context.tr('{value0} videos', {'value0': count});
   }
 
   static VideoFile videoFromFileItem(FileItem item) {

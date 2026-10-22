@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +38,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   void _syncTitleFromController(VideoInfo? videoInfo) {
     if (videoInfo != null && !_isEditingTitle) {
       final currentText = _titleController.text;
-      if (currentText.isEmpty || currentText == 'Untitled') {
+      if (currentText.isEmpty) {
         _titleController.text = videoInfo.title;
       }
     }
@@ -55,7 +56,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Download'),
+        title: Text(context.tr('Download')),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -92,8 +93,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   const SizedBox(height: 16),
                   Text(
                     state.isLoading
-                        ? 'Fetching video info...'
-                        : 'No video info loaded yet.',
+                        ? context.tr('Fetching video info...')
+                        : context.tr('No video info loaded yet.'),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.mutedText,
                     ),
@@ -141,7 +142,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Video will be saved to your gallery',
+                            context.tr('Video will be saved to your gallery'),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.mutedText,
                             ),
@@ -166,7 +167,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                   color: theme.colorScheme.onPrimary,
                                 ),
                               ),
-                              label: const Text('Starting...'),
+                              label: Text(context.tr('Starting...')),
                               style: FilledButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
@@ -196,7 +197,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        const Text('Download queued'),
+                                        Text(context.tr('Download queued')),
                                       ],
                                     ),
                                     behavior: SnackBarBehavior.floating,
@@ -209,9 +210,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                                 Navigator.of(context).pop(true);
                               },
                               icon: const Icon(Icons.download_rounded),
-                              label: const Text(
-                                'Start Download',
-                                style: TextStyle(
+                              label: Text(
+                                context.tr('Start Download'),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -254,7 +255,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
           ),
           const SizedBox(width: 6),
           Text(
-            'Estimated size: ${_formatFileSize(size)}',
+            context.tr('Estimated size: {value0}', {'value0': _formatFileSize(size)}),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -356,7 +357,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 color: theme.strongText,
               ),
               decoration: InputDecoration(
-                hintText: 'Video title',
+                hintText: context.tr(videoInfo.title.isEmpty ? 'Untitled' : 'Video title'),
                 hintStyle: TextStyle(color: theme.faintText, fontSize: 14),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -406,7 +407,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   }
 
   String _formatFileSize(int? bytes) {
-    if (bytes == null || bytes == 0) return 'Unknown';
+    if (bytes == null || bytes == 0) return context.tr('Unknown');
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {

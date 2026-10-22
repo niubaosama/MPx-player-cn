@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../history/services/history_service.dart';
 import '../../controller/player_controller.dart';
 
@@ -82,7 +83,7 @@ class ResumePlaybackHelper {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Resume from $formattedTime',
+                context.tr('Resume from {value0}', {'value0': formattedTime}),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -101,9 +102,9 @@ class ResumePlaybackHelper {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
-                'Restart',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+              child: Text(
+                context.tr('Restart'),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ),
             const SizedBox(width: 4),

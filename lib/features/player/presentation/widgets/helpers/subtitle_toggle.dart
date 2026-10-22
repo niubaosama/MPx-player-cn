@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../controller/player_controller.dart';
 
 class SubtitleToggle extends StatelessWidget {
@@ -15,10 +16,10 @@ class SubtitleToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       title:
-          const Text('Enable Subtitles', style: TextStyle(color: Colors.white)),
-      subtitle: const Text(
-        'Subtitles will auto-detect',
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+          Text(context.tr('Enable Subtitles'), style: const TextStyle(color: Colors.white)),
+      subtitle: Text(
+        context.tr('Subtitles will auto-detect'),
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
       ),
       value: controller.subtitlesEnabled,
       onChanged: (value) {

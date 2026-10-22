@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../controller/player_controller.dart';
 
 class ColorSelection extends StatelessWidget {
@@ -15,10 +16,10 @@ class ColorSelection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Text Color',
-              style: TextStyle(color: Colors.white, fontSize: 16)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(context.tr('Text Color'),
+              style: const TextStyle(color: Colors.white, fontSize: 16)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -27,7 +28,7 @@ class ColorSelection extends StatelessWidget {
             children: [
               _ColorOption(
                 color: Colors.white,
-                name: 'White',
+                name: context.tr('White'),
                 isSelected: controller.subtitleColor == Colors.white,
                 onTap: () {
                   controller.setSubtitleColor(Colors.white);
@@ -36,7 +37,7 @@ class ColorSelection extends StatelessWidget {
               ),
               _ColorOption(
                 color: Colors.yellow,
-                name: 'Yellow',
+                name: context.tr('Yellow'),
                 isSelected: controller.subtitleColor == Colors.yellow,
                 onTap: () {
                   controller.setSubtitleColor(Colors.yellow);
@@ -45,7 +46,7 @@ class ColorSelection extends StatelessWidget {
               ),
               _ColorOption(
                 color: Colors.cyan,
-                name: 'Cyan',
+                name: context.tr('Cyan'),
                 isSelected: controller.subtitleColor == Colors.cyan,
                 onTap: () {
                   controller.setSubtitleColor(Colors.cyan);
@@ -54,7 +55,7 @@ class ColorSelection extends StatelessWidget {
               ),
               _ColorOption(
                 color: Colors.green,
-                name: 'Green',
+                name: context.tr('Green'),
                 isSelected: controller.subtitleColor == Colors.green,
                 onTap: () {
                   controller.setSubtitleColor(Colors.green);
@@ -63,7 +64,7 @@ class ColorSelection extends StatelessWidget {
               ),
               _ColorOption(
                 color: Colors.red,
-                name: 'Red',
+                name: context.tr('Red'),
                 isSelected: controller.subtitleColor == Colors.red,
                 onTap: () {
                   controller.setSubtitleColor(Colors.red);

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quality_auto">自动</string>
+    <string name="quality_audio_only">仅音频</string>
+    <string name="permission_denied">未获得权限</string>
+    <string name="share_download_title">下载到 MPx</string>
+    <string name="share_download_subtitle">选择画质并开始下载</string>
+    <string name="download_quality">下载画质</string>
+    <string name="share_background_info">后台下载，通过通知查看进度</string>
+    <string name="cancel">取消</string>
+    <string name="download">下载</string>
+    <string name="download_started">已开始下载</string>
+    <string name="download_starting">正在启动下载</string>
+    <string name="share_preparing">正在准备分享下载…</string>
+    <string name="download_complete">下载完成</string>
+    <string name="saved_to">已保存到 %1$s</string>
+    <string name="download_failed">下载失败</string>
+    <string name="share_unable_to_download">无法下载分享的视频</string>
+    <string name="download_failed_detail">下载失败：%1$s</string>
+    <string name="download_finalizing">正在完成下载</string>
+    <string name="share_downloading">正在下载分享的视频</string>
+    <string name="working">正在处理…</string>
+    <string name="download_channel_name">MPx 下载</string>
+    <string name="download_channel_description">显示 MPx 分享下载进度</string>
+    <string name="url_required">请输入视频链接</string>
+    <string name="download_arguments_missing">缺少必要的下载参数</string>
+    <string name="download_file_missing">找不到已下载的文件：%1$s</string>
+    <string name="media_entry_failed">无法将视频添加到媒体库</string>
+    <string name="media_export_failed">无法写入导出的媒体文件</string>
+</resources>

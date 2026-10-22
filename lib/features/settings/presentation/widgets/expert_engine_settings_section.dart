@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 import '../../controllers/app_settings_controller.dart';
@@ -42,27 +43,27 @@ class ExpertEngineSettingsSection extends StatelessWidget {
       children: [
         SettingsSwitchRow(
           icon: Icons.memory_rounded,
-          title: 'Use expert engine settings',
+          title: context.tr('Use expert engine settings'),
           subtitle:
-              'When enabled, custom mpv engine values override the simple engine profile.',
+              context.tr('When enabled, custom mpv engine values override the simple engine profile.'),
           value: settings.expertEngineEnabled,
           onChanged: _toggleExpert,
         ),
         const SizedBox(height: 10),
         Text(
           settings.expertEngineEnabled
-              ? 'Expert mode is active. The engine profile is ignored until expert mode is turned off.'
-              : 'Simple engine profile remains active. Expert values are stored as a draft until you enable them.',
+              ? context.tr('Expert mode is active. The engine profile is ignored until expert mode is turned off.')
+              : context.tr('Simple engine profile remains active. Expert values are stored as a draft until you enable them.'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.mutedText,
             height: 1.4,
           ),
         ),
         const SizedBox(height: 16),
-        const _ExpertLabel(
-          title: 'Start from a preset',
+        _ExpertLabel(
+          title: context.tr('Start from a preset'),
           subtitle:
-              'Use a tested profile to prefill the expert fields, then fine-tune safely.',
+              context.tr('Use a tested profile to prefill the expert fields, then fine-tune safely.'),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -74,9 +75,9 @@ class ExpertEngineSettingsSection extends StatelessWidget {
                   width: 170,
                   child: SettingsChoiceCard(
                     icon: SettingsVideoPerformanceHelpers.getIcon(preset),
-                    title: SettingsVideoPerformanceHelpers.getLabel(preset),
+                    title: context.tr(SettingsVideoPerformanceHelpers.getLabel(preset)),
                     subtitle:
-                        SettingsVideoPerformanceHelpers.getDescription(preset),
+                        context.tr(SettingsVideoPerformanceHelpers.getDescription(preset)),
                     isSelected: settings.videoPerformancePreset == preset,
                     onTap: () => _applyBasePreset(preset),
                   ),
@@ -104,41 +105,41 @@ class ExpertEngineSettingsSection extends StatelessWidget {
             runSpacing: 10,
             children: [
               SettingsInlineStat(
-                label: 'Base',
-                value: SettingsVideoPerformanceHelpers.getBadge(
+                label: context.tr('Base'),
+                value: context.tr(SettingsVideoPerformanceHelpers.getBadge(
                   settings.videoPerformancePreset,
-                ),
+                )),
               ),
               SettingsInlineStat(
-                  label: 'Threads', value: '${engine.decoderThreads}'),
-              SettingsInlineStat(label: 'Sync', value: engine.videoSync),
-              SettingsInlineStat(label: 'Drop', value: engine.frameDropping),
+                  label: context.tr('Threads'), value: '${engine.decoderThreads}'),
+              SettingsInlineStat(label: context.tr('Sync'), value: engine.videoSync),
+              SettingsInlineStat(label: context.tr('Drop'), value: engine.frameDropping),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        const _ExpertLabel(
-          title: 'Decoder and sync',
+        _ExpertLabel(
+          title: context.tr('Decoder and sync'),
           subtitle:
-              'Control hardware decode, threads, frame dropping, and timing.',
+              context.tr('Control hardware decode, threads, frame dropping, and timing.'),
         ),
         const SizedBox(height: 8),
         _OptionChipsRow(
-          label: 'Hardware decode',
+          label: context.tr('Hardware decode'),
           current: engine.hardwareDecoding,
           options: const ['auto', 'auto-copy', 'yes', 'no'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(hardwareDecoding: value)),
         ),
         _OptionChipsRow(
-          label: 'Frame dropping',
+          label: context.tr('Frame dropping'),
           current: engine.frameDropping,
           options: const ['no', 'decoder', 'decoder+vo'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(frameDropping: value)),
         ),
         _OptionChipsRow(
-          label: 'Video sync',
+          label: context.tr('Video sync'),
           current: engine.videoSync,
           options: const [
             'audio',
@@ -150,8 +151,8 @@ class ExpertEngineSettingsSection extends StatelessWidget {
         ),
         _StepperRow(
           icon: Icons.developer_board_rounded,
-          title: 'Decoder threads',
-          subtitle: 'Higher values help heavy files but use more CPU.',
+          title: context.tr('Decoder threads'),
+          subtitle: context.tr('Higher values help heavy files but use more CPU.'),
           value: engine.decoderThreads,
           min: 1,
           max: 8,
@@ -159,42 +160,42 @@ class ExpertEngineSettingsSection extends StatelessWidget {
               _updateSettings(engine.copyWith(decoderThreads: value)),
         ),
         const SizedBox(height: 16),
-        const _ExpertLabel(
-          title: 'Quality and rendering',
+        _ExpertLabel(
+          title: context.tr('Quality and rendering'),
           subtitle:
-              'Tune scaling, interpolation, deinterlacing, and GPU behavior.',
+              context.tr('Tune scaling, interpolation, deinterlacing, and GPU behavior.'),
         ),
         const SizedBox(height: 8),
         _OptionChipsRow(
-          label: 'Scaler',
+          label: context.tr('Scaler'),
           current: engine.scaler,
           options: const ['bilinear', 'bicubic', 'lanczos'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(scaler: value)),
         ),
         _OptionChipsRow(
-          label: 'Downscaler',
+          label: context.tr('Downscaler'),
           current: engine.downScaler,
           options: const ['bilinear', 'bicubic', 'lanczos'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(downScaler: value)),
         ),
         _OptionChipsRow(
-          label: 'Deinterlace',
+          label: context.tr('Deinterlace'),
           current: engine.deinterlacing,
           options: const ['auto', 'yes', 'no'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(deinterlacing: value)),
         ),
         _OptionChipsRow(
-          label: 'GPU backend',
+          label: context.tr('GPU backend'),
           current: engine.gpuBackend,
           options: const ['auto', 'opengl', 'vulkan'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(gpuBackend: value)),
         ),
         _OptionChipsRow(
-          label: 'GPU API',
+          label: context.tr('GPU API'),
           current: engine.gpuApi,
           options: const ['auto', 'opengl', 'vulkan'],
           onSelected: (value) =>
@@ -202,46 +203,46 @@ class ExpertEngineSettingsSection extends StatelessWidget {
         ),
         SettingsSwitchRow(
           icon: Icons.motion_photos_on_rounded,
-          title: 'Interpolation',
-          subtitle: 'Smooth motion but heavier GPU usage.',
+          title: context.tr('Interpolation'),
+          subtitle: context.tr('Smooth motion but heavier GPU usage.'),
           value: engine.interpolation,
           onChanged: (value) =>
               _updateSettings(engine.copyWith(interpolation: value)),
         ),
         if (engine.interpolation)
           _OptionChipsRow(
-            label: 'Temporal scaler',
+            label: context.tr('Temporal scaler'),
             current: engine.temporalScaler,
             options: const ['oversample', 'linear', 'cosine'],
             onSelected: (value) =>
                 _updateSettings(engine.copyWith(temporalScaler: value)),
           ),
         const SizedBox(height: 16),
-        const _ExpertLabel(
-          title: 'Cache and seeking',
+        _ExpertLabel(
+          title: context.tr('Cache and seeking'),
           subtitle:
-              'Adjust buffering and seek behavior for local or online playback.',
+              context.tr('Adjust buffering and seek behavior for local or online playback.'),
         ),
         const SizedBox(height: 8),
         SettingsSwitchRow(
           icon: Icons.sd_storage_rounded,
-          title: 'Optimize for local files',
-          subtitle: 'Prefer local-file seek behavior over network buffering.',
+          title: context.tr('Optimize for local files'),
+          subtitle: context.tr('Prefer local-file seek behavior over network buffering.'),
           value: engine.optimizeForLocalFiles,
           onChanged: (value) =>
               _updateSettings(engine.copyWith(optimizeForLocalFiles: value)),
         ),
         _OptionChipsRow(
-          label: 'Cache mode',
+          label: context.tr('Cache mode'),
           current: engine.cache,
           options: const ['yes', 'no'],
           onSelected: (value) => _updateSettings(engine.copyWith(cache: value)),
         ),
         _StepperRow(
           icon: Icons.timelapse_rounded,
-          title: 'Cache seconds',
+          title: context.tr('Cache seconds'),
           subtitle:
-              'Larger cache helps unstable playback but uses more memory.',
+              context.tr('Larger cache helps unstable playback but uses more memory.'),
           value: engine.cacheSecs,
           min: 5,
           max: 180,
@@ -250,62 +251,62 @@ class ExpertEngineSettingsSection extends StatelessWidget {
               _updateSettings(engine.copyWith(cacheSecs: value)),
         ),
         _OptionChipsRow(
-          label: 'Cache back',
+          label: context.tr('Cache back'),
           current: engine.cacheBack,
           options: const ['64M', '128M', '256M'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(cacheBack: value)),
         ),
         _OptionChipsRow(
-          label: 'Demuxer max',
+          label: context.tr('Demuxer max'),
           current: engine.demuxerMaxBytes,
           options: const ['32M', '64M', '128M'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(demuxerMaxBytes: value)),
         ),
         _OptionChipsRow(
-          label: 'Back buffer',
+          label: context.tr('Back buffer'),
           current: engine.demuxerMaxBackBytes,
           options: const ['64M', '128M', '256M'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(demuxerMaxBackBytes: value)),
         ),
         _OptionChipsRow(
-          label: 'HR seek',
+          label: context.tr('HR seek'),
           current: engine.hrSeek,
           options: const ['yes', 'no'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(hrSeek: value)),
         ),
         _OptionChipsRow(
-          label: 'Fast seek',
+          label: context.tr('Fast seek'),
           current: engine.fastSeek,
           options: const ['yes', 'no'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(fastSeek: value)),
         ),
         _OptionChipsRow(
-          label: 'Seek framedrop',
+          label: context.tr('Seek framedrop'),
           current: engine.hrSeekFramedrop,
           options: const ['yes', 'no'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(hrSeekFramedrop: value)),
         ),
         const SizedBox(height: 16),
-        const _ExpertLabel(
-          title: 'Compatibility',
-          subtitle: 'Use these when a device decoder is unstable or broken.',
+        _ExpertLabel(
+          title: context.tr('Compatibility'),
+          subtitle: context.tr('Use these when a device decoder is unstable or broken.'),
         ),
         const SizedBox(height: 8),
         _OptionChipsRow(
-          label: 'Fast decoding',
+          label: context.tr('Fast decoding'),
           current: engine.fastDecoding,
           options: const ['no', 'yes'],
           onSelected: (value) =>
               _updateSettings(engine.copyWith(fastDecoding: value)),
         ),
         _OptionChipsRow(
-          label: 'HW codecs',
+          label: context.tr('HW codecs'),
           current: engine.hwdecCodecs,
           options: const ['all', 'h264', 'h264,hevc', 'hevc'],
           onSelected: (value) =>

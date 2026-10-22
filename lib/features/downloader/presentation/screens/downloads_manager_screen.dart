@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../controller/downloader_controller.dart';
@@ -62,11 +63,11 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Downloader'),
-          bottom: const TabBar(
+          title: Text(context.tr('Downloader')),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Active'),
-              Tab(text: 'Completed'),
+              Tab(text: context.tr('Active')),
+              Tab(text: context.tr('Completed')),
             ],
           ),
         ),
@@ -74,13 +75,13 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
           children: [
             _DownloadsList(
               items: state.activeDownloads,
-              emptyTitle: 'No active downloads',
-              emptySubtitle: 'Start a new task to track progress here.',
+              emptyTitle: context.tr('No active downloads'),
+              emptySubtitle: context.tr('Start a new task to track progress here.'),
             ),
             _DownloadsList(
               items: state.completedDownloads,
-              emptyTitle: 'Nothing finished yet',
-              emptySubtitle: 'Completed downloads will show up here.',
+              emptyTitle: context.tr('Nothing finished yet'),
+              emptySubtitle: context.tr('Completed downloads will show up here.'),
             ),
           ],
         ),
@@ -93,7 +94,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
             );
           },
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Add'),
+          label: Text(context.tr('Add')),
         ),
       ),
     );

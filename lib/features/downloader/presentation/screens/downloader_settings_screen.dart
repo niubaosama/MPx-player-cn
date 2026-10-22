@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -69,7 +70,7 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
   Future<void> _pickDownloadFolder() async {
     final messenger = ScaffoldMessenger.of(context);
     final selectedDir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Choose download folder',
+      dialogTitle: context.tr('Choose download folder'),
     );
     if (selectedDir == null) return;
 
@@ -77,7 +78,7 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
     if (mounted) {
       setState(() => _downloadPath = selectedDir);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Download folder saved.')),
+        SnackBar(content: Text(context.tr('Download folder saved.'))),
       );
     }
   }
@@ -90,7 +91,13 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text(status.message ?? 'Update check finished.'),
+            content: Text(
+              status.updated && status.version != null
+                  ? context.tr('yt-dlp updated to {version}', {
+                      'version': status.version,
+                    })
+                  : context.tr(status.message ?? 'Update check finished.'),
+            ),
           ),
         );
         setState(() {});
@@ -111,17 +118,17 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final binaryStatus = BinaryManager.instance.status;
-    final versionText = binaryStatus.version ?? 'Unknown version';
-    final latestText = binaryStatus.latestVersion ?? 'Unknown';
+    final versionText = binaryStatus.version ?? context.tr('Unknown version');
+    final latestText = binaryStatus.latestVersion ?? context.tr('Unknown');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloader Settings')),
+      appBar: AppBar(title: Text(context.tr('Downloader Settings'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile.adaptive(
             value: _autoUpdate,
-            title: const Text('Auto-update yt-dlp engine'),
+            title: Text(context.tr('Auto-update yt-dlp engine')),
             onChanged: (value) async {
               await DownloaderSettingsService.setAutoUpdateEnabled(value);
               setState(() => _autoUpdate = value);
@@ -129,7 +136,7 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
           ),
           SwitchListTile.adaptive(
             value: _logsEnabled,
-            title: const Text('Enable debug logs'),
+            title: Text(context.tr('Enable debug logs')),
             onChanged: (value) async {
               await DownloaderSettingsService.setLogsEnabled(value);
               setState(() => _logsEnabled = value);
@@ -150,7 +157,7 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.folder_outlined),
-            title: const Text('Download folder'),
+            title: Text(context.tr('Download folder')),
             subtitle: Text(
               _downloadPath ?? '/Movies/mpxReels',
               maxLines: 1,
@@ -159,19 +166,19 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
             trailing: OutlinedButton.icon(
               onPressed: _pickDownloadFolder,
               icon: const Icon(Icons.drive_file_rename_outline, size: 18),
-              label: const Text('Change'),
+              label: Text(context.tr('Change')),
             ),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Cookies file'),
+            title: Text(context.tr('Cookies file')),
             subtitle: Text(
               _cookiesPath ??
-                  'Not imported. Import cookies for Instagram or age-restricted content.',
+                  context.tr('Not imported. Import cookies for Instagram or age-restricted content.'),
             ),
             trailing: OutlinedButton(
               onPressed: _pickCookies,
-              child: const Text('Import'),
+              child: Text(context.tr('Import')),
             ),
           ),
           Card(
@@ -182,52 +189,52 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Instagram cookies help',
+                    context.tr('Instagram cookies help'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'If Instagram says to import cookies, export a Netscape-format cookies.txt file from a browser where you are already logged in to Instagram, then tap Import above.',
+                  Text(
+                    context.tr('If Instagram says to import cookies, export a Netscape-format cookies.txt file from a browser where you are already logged in to Instagram, then tap Import above.'),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Quick path: log into Instagram in Firefox or Kiwi Browser -> use a cookie-export extension -> save cookies.txt -> import it here.',
+                  Text(
+                    context.tr('Quick path: log into Instagram in Firefox or Kiwi Browser -> use a cookie-export extension -> save cookies.txt -> import it here.'),
                   ),
                 ],
               ),
             ),
           ),
-          const ListTile(
+           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('Share behavior'),
+            title: Text(context.tr('Share behavior')),
             subtitle: Text(
-              'Shared links open a small approval window with quality choices and then show a progress notification instead of opening the full app.',
+              context.tr('Shared links open a small approval window with quality choices and then show a progress notification instead of opening the full app.'),
             ),
           ),
           const Divider(height: 28),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('yt-dlp engine'),
+            title: Text(context.tr('yt-dlp engine')),
             subtitle: Text(versionText),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Latest known version'),
+            title: Text(context.tr('Latest known version')),
             subtitle: Text(latestText),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Engine status'),
+            title: Text(context.tr('Engine status')),
             subtitle: Text(
               _loadingStatus
-                  ? 'Checking...'
+                  ? context.tr('Checking...')
                   : binaryStatus.ytDlpAvailable
                       ? (binaryStatus.updateAvailable
-                          ? 'Update available'
-                          : 'Ready')
-                      : 'Unavailable',
+                          ? context.tr('Update available')
+                          : context.tr('Ready'))
+                      : context.tr('Unavailable'),
             ),
           ),
           FilledButton.icon(
@@ -239,7 +246,7 @@ class _DownloaderSettingsScreenState extends State<DownloaderSettingsScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.refresh_rounded),
-            label: const Text('Update downloader engine'),
+            label: Text(context.tr('Update downloader engine')),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../controller/file_browser_controller.dart';
 
@@ -42,13 +43,13 @@ class HomeSelectionHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${controller.selectedCount} selected',
+                  Text(context.tr('{value0} selected', {'value0': controller.selectedCount}),
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: theme.strongText)),
                   const SizedBox(height: 2),
-                  Text('Select more items or manage them in one go.',
+                  Text(context.tr('Select more items or manage them in one go.'),
                       style: TextStyle(
                           color: theme.mutedText,
                           fontSize: 12,

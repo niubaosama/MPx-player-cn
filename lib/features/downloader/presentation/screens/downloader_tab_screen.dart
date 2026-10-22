@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../controller/downloader_controller.dart';
@@ -70,7 +71,7 @@ class _DownloaderTabScreenState extends State<DownloaderTabScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shared link queued for download.')),
+        SnackBar(content: Text(context.tr('Shared link queued for download.'))),
       );
       Navigator.of(context).pop(true);
       return;
@@ -95,7 +96,7 @@ class _DownloaderTabScreenState extends State<DownloaderTabScreen> {
     final state = context.watch<DownloaderController>().state;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Download')),
+      appBar: AppBar(title: Text(context.tr('Add Download'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -107,13 +108,13 @@ class _DownloaderTabScreenState extends State<DownloaderTabScreen> {
           if (state.errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
-              state.errorMessage!,
+              context.tr(state.errorMessage!),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
           const SizedBox(height: 20),
           Text(
-            'Paste a supported video URL to preview metadata and choose quality before starting the download.',
+            context.tr('Paste a supported video URL to preview metadata and choose quality before starting the download.'),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../domain/entities/watch_history_entry.dart';
 
@@ -16,7 +17,7 @@ class HistoryInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            entry.video?.title ?? 'Unknown Video',
+            entry.video?.title ?? context.tr('Unknown Video'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -49,7 +50,7 @@ class HistoryInfo extends StatelessWidget {
               _buildInfoChip(
                 context,
                 icon: Icons.access_time,
-                label: entry.formattedLastPlayed,
+                label: context.l10n.relativeDate(entry.lastPlayedAt),
               ),
               const SizedBox(width: 12),
               if (!entry.isCompleted)
@@ -103,7 +104,7 @@ class HistoryInfo extends StatelessWidget {
           Icon(Icons.check_circle, size: 12, color: colors.primary),
           const SizedBox(width: 4),
           Text(
-            'Watched',
+            context.tr('Watched'),
             style: TextStyle(
               fontSize: 11,
               color: colors.primary,

@@ -66,7 +66,7 @@ class VideoInfoModel extends VideoInfo {
 
     return VideoInfoModel(
       id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? 'Untitled',
+      title: json['title'] as String? ?? '',
       uploader: json['uploader'] as String?,
       duration: (json['duration'] as num?)?.toInt(),
       webpageUrl: json['webpage_url'] as String?,

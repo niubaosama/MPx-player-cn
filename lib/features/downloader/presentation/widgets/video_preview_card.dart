@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 import '../../domain/entities/video_info.dart';
@@ -107,7 +108,7 @@ class VideoPreviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  videoInfo.title,
+                  videoInfo.title.isEmpty ? context.tr('Untitled') : videoInfo.title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     height: 1.3,
@@ -130,7 +131,7 @@ class VideoPreviewCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        videoInfo.uploader ?? 'Unknown uploader',
+                        videoInfo.uploader ?? context.tr('Unknown uploader'),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.mutedText,
                         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mpv/flutter_mpv.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../player/controller/player_state.dart';
@@ -181,6 +182,7 @@ class ExpertEngineSettings {
 }
 
 class AppSettingsService {
+  static const String _languageKey = 'app_language';
   static const String _themePreferenceKey = 'app_theme_preference';
   static const String _playerPresetKey = 'player_preset';
   static const String _videoPerformancePresetKey = 'advanced_video_performance';
@@ -216,6 +218,20 @@ class AppSettingsService {
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
+
+  static AppLanguage get language {
+    switch (_prefs.getString(_languageKey)) {
+      case 'zh':
+        return AppLanguage.zh;
+      case 'en':
+        return AppLanguage.en;
+      default:
+        return AppLanguage.system;
+    }
+  }
+
+  static Future<bool> setLanguage(AppLanguage value) =>
+      _prefs.setString(_languageKey, value.name);
 
   static AppThemePreference get themePreference {
     final value = _prefs.getString(_themePreferenceKey);

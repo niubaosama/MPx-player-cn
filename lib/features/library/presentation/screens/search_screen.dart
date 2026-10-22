@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme_tokens.dart';
 import '../../domain/entities/video_file.dart';
 import '../../data/datasources/directory_browser.dart';
@@ -179,7 +180,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 onChanged: _onSearchChanged,
                 style: TextStyle(fontSize: 16, color: theme.strongText),
                 decoration: InputDecoration(
-                  hintText: 'Search videos...',
+                  hintText: context.tr('Search videos...'),
                   hintStyle: TextStyle(color: theme.faintText),
                   prefixIcon: Icon(Icons.search, color: theme.faintText),
                   suffixIcon: _searchQuery.isNotEmpty
@@ -215,7 +216,7 @@ class _SearchScreenState extends State<SearchScreen> {
             CircularProgressIndicator(color: theme.colorScheme.primary),
             const SizedBox(height: 16),
             Text(
-              _isIndexing ? 'Indexing your library...' : 'Searching videos...',
+              _isIndexing ? context.tr('Indexing your library...') : context.tr('Searching videos...'),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -229,15 +230,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
     if (_searchQuery.isEmpty) {
       return _buildEmptyState(
-        'Search your library',
-        'Try a title, folder name, or a few keywords',
+        context.tr('Search your library'),
+        context.tr('Try a title, folder name, or a few keywords'),
       );
     }
 
     if (_searchResults.isEmpty) {
       return _buildEmptyState(
-        'No results found',
-        'Try shorter keywords or search by folder name',
+        context.tr('No results found'),
+        context.tr('Try shorter keywords or search by folder name'),
       );
     }
 
@@ -248,7 +249,7 @@ class _SearchScreenState extends State<SearchScreen> {
           child: Row(
             children: [
               Text(
-                '${_searchResults.length} result${_searchResults.length == 1 ? '' : 's'}',
+                context.tr('{value0} result{value1}', {'value0': _searchResults.length, 'value1': _searchResults.length == 1 ? '' : 's'}),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -350,22 +351,22 @@ class _SortDropdown extends StatelessWidget {
           icon: Icon(Icons.sort, size: 18, color: theme.mutedText),
           dropdownColor: theme.elevatedSurface,
           style: TextStyle(fontSize: 13, color: theme.strongText),
-          items: const [
+          items:  [
             DropdownMenuItem(
               value: LibrarySearchSort.relevance,
-              child: Text('Relevance'),
+              child: Text(context.tr('Relevance')),
             ),
             DropdownMenuItem(
               value: LibrarySearchSort.recent,
-              child: Text('Recent'),
+              child: Text(context.tr('Recent')),
             ),
             DropdownMenuItem(
               value: LibrarySearchSort.name,
-              child: Text('Name'),
+              child: Text(context.tr('Name')),
             ),
             DropdownMenuItem(
               value: LibrarySearchSort.size,
-              child: Text('Size'),
+              child: Text(context.tr('Size')),
             ),
           ],
           onChanged: (v) {

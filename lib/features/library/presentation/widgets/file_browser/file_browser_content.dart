@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../controller/file_browser_controller.dart';
 import '../../../controller/library_view_controller.dart';
@@ -122,7 +123,7 @@ class FileBrowserContent extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Refreshing library...',
+                      context.tr('Refreshing library...'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -335,8 +336,8 @@ class _GridItem extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             item.isDirectory
-                                ? 'Updated ${LibraryItemUi.relativeDate(item.modified)}'
-                                : '${LibraryItemUi.parentFolderName(item.path)} • ${LibraryItemUi.relativeDate(item.modified)}',
+                                ? context.tr('Updated {value0}', {'value0': LibraryItemUi.relativeDate(context, item.modified)})
+                                : '${LibraryItemUi.parentFolderName(item.path)} • ${LibraryItemUi.relativeDate(context, item.modified)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -351,8 +352,7 @@ class _GridItem extends StatelessWidget {
                               Expanded(
                                 child: _GridMetaChip(
                                   label: item.isDirectory
-                                      ? LibraryItemUi.folderVideoLabel(
-                                          item.videoCount,
+                                      ? LibraryItemUi.folderVideoLabel(context, item.videoCount,
                                         )
                                       : item.formattedSize,
                                   color: item.isDirectory
@@ -505,7 +505,7 @@ class _GridItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                LibraryItemUi.folderVideoLabel(item.videoCount),
+                LibraryItemUi.folderVideoLabel(context, item.videoCount),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

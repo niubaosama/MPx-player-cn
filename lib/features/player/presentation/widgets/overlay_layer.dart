@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../controller/player_controller.dart';
 import '../../../reels/presentation/widgets/playback_speed_indicator.dart';
 import '../../../reels/presentation/widgets/seek_feedback_indicator.dart';
@@ -192,7 +193,7 @@ class OverlayLayer extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${isForward ? '+' : ''}${_formatSeekDelta(delta)}',
+                        '${isForward ? '+' : ''}${_formatSeekDelta(context, delta)}',
                         style: TextStyle(
                           color: deltaColor,
                           fontSize: 14,
@@ -227,14 +228,14 @@ class OverlayLayer extends StatelessWidget {
     );
   }
 
-  String _formatSeekDelta(Duration delta) {
+  String _formatSeekDelta(BuildContext context, Duration delta) {
     final totalSeconds = delta.inSeconds.abs();
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     if (minutes > 0) {
-      return '${minutes}m ${seconds}s';
+      return context.tr('{value0}m {value1}s', {'value0': minutes, 'value1': seconds});
     }
-    return '${seconds}s';
+    return context.tr('{value0}s', {'value0': seconds});
   }
 
   Widget _buildBufferingIndicator() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:mpx/features/reels/controllers/reels_controller.dart';
 import 'package:mpx/features/reels/presentation/widgets/reel_player_item.dart';
@@ -80,15 +81,15 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     final currentPath = fileBrowserController.currentPath;
 
     if (currentPath.isEmpty) {
-      _showSnackBar('Please navigate to a folder first.', Colors.orange);
+      _showSnackBar(context.tr('Please navigate to a folder first.'), Colors.orange);
       return;
     }
 
     try {
       await reelsController.importFolderToReels(currentPath);
-      _showSnackBar('Folder imported to Reels!', Colors.green);
+      _showSnackBar(context.tr('Folder imported to Reels!'), Colors.green);
     } catch (e) {
-      _showSnackBar('Failed to import folder: $e', Colors.red);
+      _showSnackBar(context.tr('Failed to import folder: {value0}', {'value0': e}), Colors.red);
     }
   }
 
@@ -132,7 +133,7 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
           return Scaffold(
             body: Center(
               child: Text(
-                'Error: ${controller.error}',
+                context.tr('Error: {value0}', {'value0': controller.error}),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),

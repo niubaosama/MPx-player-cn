@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class UrlInputField extends StatelessWidget {
   const UrlInputField({
@@ -17,8 +18,8 @@ class UrlInputField extends StatelessWidget {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
-        labelText: 'Video URL',
-        hintText: 'Paste a YouTube or supported site URL',
+        labelText: context.tr('Video URL'),
+        hintText: context.tr('Paste a YouTube or supported site URL'),
         prefixIcon: const Icon(Icons.link_rounded),
         suffixIcon: IconButton(
           onPressed: isBusy ? null : onSubmit,

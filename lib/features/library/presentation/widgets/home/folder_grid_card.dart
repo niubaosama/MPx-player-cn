@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/features/library/domain/entities/video_folder.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
@@ -80,7 +81,7 @@ class FolderGridCard extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   _GridMetaPill(
-                      label: '${folder.videoCount} videos', tint: accent),
+                      label: context.tr('{value0} videos', {'value0': folder.videoCount}), tint: accent),
                   _GridMetaPill(label: folder.formattedSize, tint: secondary),
                 ],
               ),

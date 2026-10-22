@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../domain/entities/file_item.dart';
 import '../common/library_item_ui.dart';
@@ -151,7 +152,7 @@ class FileListItem extends StatelessWidget {
             children: [
               _MetaChip(
                 label: item.isDirectory
-                    ? LibraryItemUi.folderVideoLabel(item.videoCount)
+                    ? LibraryItemUi.folderVideoLabel(context, item.videoCount)
                     : item.formattedSize,
                 tint: item.isDirectory
                     ? theme.colorScheme.primary
@@ -168,8 +169,8 @@ class FileListItem extends StatelessWidget {
           Flexible(
             child: Text(
               item.isDirectory
-                  ? 'Folder'
-                  : '${LibraryItemUi.parentFolderName(item.path)} • ${LibraryItemUi.relativeDate(item.modified)}',
+                  ? context.tr('Folder')
+                  : '${LibraryItemUi.parentFolderName(item.path)} • ${LibraryItemUi.relativeDate(context, item.modified)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(

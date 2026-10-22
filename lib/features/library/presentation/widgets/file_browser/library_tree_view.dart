@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../data/datasources/directory_browser.dart';
 import '../../../domain/entities/file_item.dart';
@@ -225,8 +226,7 @@ class _LibraryTreeViewState extends State<LibraryTreeView> {
             ),
           ),
           trailing: Text(
-            LibraryItemUi.folderVideoLabel(
-              _childrenCache[path]?.where((c) => c.isVideo).length ??
+            LibraryItemUi.folderVideoLabel(context, _childrenCache[path]?.where((c) => c.isVideo).length ??
                   _browser.getVideoCount(path),
             ),
             style: TextStyle(

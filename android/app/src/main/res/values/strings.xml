@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quality_auto">Auto</string>
+    <string name="quality_audio_only">Audio only</string>
+    <string name="permission_denied">Permission denied</string>
+    <string name="share_download_title">Download to MPx</string>
+    <string name="share_download_subtitle">Choose quality and start downloading</string>
+    <string name="download_quality">Download Quality</string>
+    <string name="share_background_info">Downloads run in background with progress notification</string>
+    <string name="cancel">Cancel</string>
+    <string name="download">Download</string>
+    <string name="download_started">Download started</string>
+    <string name="download_starting">Starting download</string>
+    <string name="share_preparing">Preparing MPx share download...</string>
+    <string name="download_complete">Download complete</string>
+    <string name="saved_to">Saved to %1$s</string>
+    <string name="download_failed">Download failed</string>
+    <string name="share_unable_to_download">Unable to download shared video</string>
+    <string name="download_failed_detail">Download failed: %1$s</string>
+    <string name="download_finalizing">Finalizing download</string>
+    <string name="share_downloading">Downloading shared video</string>
+    <string name="working">Working...</string>
+    <string name="download_channel_name">MPx Downloads</string>
+    <string name="download_channel_description">Shows MPx shared download progress</string>
+    <string name="url_required">URL is required</string>
+    <string name="download_arguments_missing">Missing required download arguments</string>
+    <string name="download_file_missing">Downloaded file not found: %1$s</string>
+    <string name="media_entry_failed">Failed to create public media entry</string>
+    <string name="media_export_failed">Failed to open output stream for exported media</string>
+</resources>

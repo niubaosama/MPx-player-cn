@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme_tokens.dart';
 import '../../controller/file_browser_controller.dart';
@@ -61,22 +62,22 @@ class _HomeScreenState extends State<HomeScreen>
     final currentPath = controller.currentPath;
 
     if (currentPath.isEmpty) {
-      _showSnackBar('Please navigate to a folder first.', Colors.orange);
+      _showSnackBar(context.tr('Please navigate to a folder first.'), Colors.orange);
       return;
     }
 
     if (currentPath == controller.getRootPath) {
       _showSnackBar(
-          'Cannot import root directory. Please navigate to a specific folder.',
+          context.tr('Cannot import root directory. Please navigate to a specific folder.'),
           Colors.red);
       return;
     }
 
     try {
       await reelsController.importFolderToReels(currentPath);
-      _showSnackBar('Folder imported to Reels!', Colors.green);
+      _showSnackBar(context.tr('Folder imported to Reels!'), Colors.green);
     } catch (e) {
-      _showSnackBar('Failed to import folder: $e', Colors.red);
+      _showSnackBar(context.tr('Failed to import folder: {value0}', {'value0': e}), Colors.red);
     }
   }
 
@@ -95,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
     final currentPath = controller.currentPath;
 
     if (currentPath.isEmpty || currentPath == controller.getRootPath) {
-      _showSnackBar('Please navigate to a specific folder to play as Reels.',
+      _showSnackBar(context.tr('Please navigate to a specific folder to play as Reels.'),
           Colors.orange);
       return;
     }
@@ -225,17 +226,17 @@ class _HomeScreenState extends State<HomeScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Selected'),
+        title: Text(context.tr('Delete Selected')),
         content: Text(
-            'Are you sure you want to delete ${controller.selectedCount} items? This cannot be undone.'),
+            context.tr('Are you sure you want to delete {value0} items? This cannot be undone.', {'value0': controller.selectedCount})),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+              child: Text(context.tr('Cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('Delete')),
           ),
         ],
       ),

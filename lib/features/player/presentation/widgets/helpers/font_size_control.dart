@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../controller/player_controller.dart';
 
 class FontSizeControl extends StatelessWidget {
@@ -15,10 +16,10 @@ class FontSizeControl extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Font Size',
-              style: TextStyle(color: Colors.white, fontSize: 16)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(context.tr('Font Size'),
+              style: const TextStyle(color: Colors.white, fontSize: 16)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

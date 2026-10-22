@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class HomeErrorState extends StatelessWidget {
   final String? errorMessage;
@@ -23,7 +24,7 @@ class HomeErrorState extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Error Loading Videos',
+            context.tr('Error Loading Videos'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -34,7 +35,7 @@ class HomeErrorState extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              errorMessage ?? 'Unknown error',
+              errorMessage ?? context.tr('Unknown error'),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade500,
@@ -46,7 +47,7 @@ class HomeErrorState extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Try Again'),
+            label: Text(context.tr('Try Again')),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,

@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 import '../services/app_settings_service.dart';
 
 class AppSettingsController extends ChangeNotifier {
+  AppLanguage _language = AppSettingsService.language;
+
+  AppLanguage get language => _language;
+  Locale? get locale =>
+      _language == AppLanguage.system ? null : Locale(_language.name);
+
+  Future<bool> setLanguage(AppLanguage value) async {
+    if (_language == value) return true;
+    if (!await AppSettingsService.setLanguage(value)) return false;
+    _language = value;
+    notifyListeners();
+    return true;
+  }
+
   AppThemePreference _themePreference = AppSettingsService.themePreference;
   PlayerPreset _playerPreset = AppSettingsService.playerPreset;
   VideoPerformancePreset _videoPerformancePreset =

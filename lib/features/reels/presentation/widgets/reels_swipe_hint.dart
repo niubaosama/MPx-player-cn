@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class ReelsSwipeHint extends StatelessWidget {
   final bool showExitHint;
@@ -27,18 +28,18 @@ class ReelsSwipeHint extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.08),
             ),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.swipe_right_alt_rounded,
                 color: Colors.white,
                 size: 18,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'Swipe right to leave Reels',
-                style: TextStyle(
+                context.tr('Swipe right to leave Reels'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

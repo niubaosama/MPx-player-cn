@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/services/permission_service.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 import 'package:mpx/features/downloader/presentation/screens/downloader_settings_screen.dart';
@@ -56,15 +57,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SettingsHeader(),
                   const SizedBox(height: 16),
                   _buildExpandableSection(
+                    index: 2,
+                    title: context.tr('Language'),
+                    icon: Icons.language,
+                    colors: colors,
+                    child: _LanguageSection(settings: settings),
+                  ),
+                  _buildExpandableSection(
                     index: 0,
-                    title: 'Appearance',
+                    title: context.tr('Appearance'),
                     icon: Icons.palette_outlined,
                     colors: colors,
                     child: _ThemeSection(settings: settings),
                   ),
                   _buildExpandableSection(
                     index: 1,
-                    title: 'Subtitles',
+                    title: context.tr('Subtitles'),
                     icon: Icons.subtitles_outlined,
                     accent: const Color(0xFFEA580C),
                     colors: colors,
@@ -72,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   _buildExpandableSection(
                     index: 3,
-                    title: 'Engine',
+                    title: context.tr('Engine'),
                     icon: Icons.tune,
                     accent: const Color(0xFF0F766E),
                     colors: colors,
@@ -80,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   _buildExpandableSection(
                     index: 4,
-                    title: 'Downloader',
+                    title: context.tr('Downloader'),
                     icon: Icons.download_rounded,
                     accent: const Color(0xFF2563EB),
                     colors: colors,
@@ -89,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (Platform.isAndroid)
                     _buildExpandableSection(
                       index: 5,
-                      title: 'Storage & Permissions',
+                      title: context.tr('Storage & Permissions'),
                       icon: Icons.folder_outlined,
                       accent: const Color(0xFF7C3AED),
                       colors: colors,
@@ -199,6 +207,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+class _LanguageSection extends StatelessWidget {
+  const _LanguageSection({required this.settings});
+
+  final AppSettingsController settings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.tr('Choose the app language. Changes take effect immediately.')),
+          const SizedBox(height: 12),
+          DropdownButton<AppLanguage>(
+            value: settings.language,
+            isExpanded: true,
+            items: [
+              DropdownMenuItem(
+                value: AppLanguage.system,
+                child: Text(context.tr('Follow system')),
+              ),
+              const DropdownMenuItem(
+                value: AppLanguage.zh,
+                child: Text('简体中文'),
+              ),
+              const DropdownMenuItem(
+                value: AppLanguage.en,
+                child: Text('English'),
+              ),
+            ],
+            onChanged: (value) async {
+              if (value == null) return;
+              final saved = await settings.setLanguage(value);
+              if (!saved && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(context.tr('Could not save language preference. Please try again.'))),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ThemeSection extends StatelessWidget {
   final AppSettingsController settings;
 
@@ -211,9 +266,9 @@ class _ThemeSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Pick light, dark, or follow device.',
-            style: TextStyle(
+          Text(
+            context.tr('Pick light, dark, or follow device.'),
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
             ),
@@ -228,8 +283,8 @@ class _ThemeSection extends StatelessWidget {
                     width: 150,
                     child: SettingsChoiceCard(
                       icon: SettingsThemeHelpers.getIcon(preference),
-                      title: SettingsThemeHelpers.getLabel(preference),
-                      subtitle: SettingsThemeHelpers.getDescription(preference),
+                      title: context.tr(SettingsThemeHelpers.getLabel(preference)),
+                      subtitle: context.tr(SettingsThemeHelpers.getDescription(preference)),
                       isSelected: settings.themePreference == preference,
                       onTap: () => settings.setThemePreference(preference),
                     ),
@@ -253,9 +308,9 @@ class _SubtitleSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Applied to player automatically.',
-            style: TextStyle(
+          Text(
+            context.tr('Applied to player automatically.'),
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
             ),
@@ -263,8 +318,8 @@ class _SubtitleSection extends StatelessWidget {
           const SizedBox(height: 12),
           SettingsSwitchRow(
             icon: Icons.subtitles_outlined,
-            title: 'Enable subtitles',
-            subtitle: 'Keep captions on when available',
+            title: context.tr('Enable subtitles'),
+            subtitle: context.tr('Keep captions on when available'),
             value: SubtitleSettingsService.isEnabled,
             onChanged: (value) async {
               await SubtitleSettingsService.setEnabled(value);
@@ -290,9 +345,9 @@ class _EngineSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Decoder, sync, scaling, cache. Expert mode.',
-            style: TextStyle(
+          Text(
+            context.tr('Decoder, sync, scaling, cache. Expert mode.'),
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
             ),
@@ -315,9 +370,9 @@ class _DownloaderSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Manage on-device downloads and downloader preferences.',
-            style: TextStyle(
+          Text(
+            context.tr('Manage on-device downloads and downloader preferences.'),
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
             ),
@@ -326,8 +381,8 @@ class _DownloaderSection extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.download_for_offline_outlined),
-            title: const Text('Open downloader'),
-            subtitle: const Text('Queue URLs and manage active downloads'),
+            title: Text(context.tr('Open downloader')),
+            subtitle: Text(context.tr('Queue URLs and manage active downloads')),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -339,8 +394,8 @@ class _DownloaderSection extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.tune_rounded),
-            title: const Text('Downloader settings'),
-            subtitle: const Text('Quality, cookies, updates, and diagnostics'),
+            title: Text(context.tr('Downloader settings')),
+            subtitle: Text(context.tr('Quality, cookies, updates, and diagnostics')),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -394,8 +449,8 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
         SnackBar(
           content: Text(
             granted
-                ? 'All files access granted. Restart the app if files still don\'t appear.'
-                : 'Permission not granted. Some features may be limited.',
+                ? context.tr('All files access granted. Restart the app if files still don\'t appear.')
+                : context.tr('Permission not granted. Some features may be limited.'),
           ),
         ),
       );
@@ -409,9 +464,9 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Control how MPx accesses files on your device. Required for full file browsing.',
-            style: TextStyle(
+          Text(
+            context.tr('Control how MPx accesses files on your device. Required for full file browsing.'),
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
             ),
@@ -430,17 +485,17 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
                         : Icons.folder_off_outlined,
                     color: _hasFullAccess ? Colors.green : null,
                   ),
-                  title: const Text('All files access'),
+                  title: Text(context.tr('All files access')),
                   subtitle: Text(
                     _hasFullAccess
-                        ? 'Granted - MPx can access all files'
-                        : 'Not granted - File browsing is limited. Tap to enable.',
+                        ? context.tr('Granted - MPx can access all files')
+                        : context.tr('Not granted - File browsing is limited. Tap to enable.'),
                   ),
                   trailing: _hasFullAccess
                       ? null
                       : TextButton(
                           onPressed: _requestFullAccess,
-                          child: const Text('Enable'),
+                          child: Text(context.tr('Enable')),
                         ),
                   onTap: _hasFullAccess ? null : _requestFullAccess,
                 ),
@@ -454,19 +509,19 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
                       color: Colors.amber.withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.info_outline,
                         size: 18,
                         color: Colors.amber,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.',
-                          style: TextStyle(
+                          context.tr('Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.'),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Colors.amber,
                           ),

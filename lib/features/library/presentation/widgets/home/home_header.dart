@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../domain/enums/library_view_mode.dart';
 
@@ -43,17 +44,17 @@ class HomeHeader extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.sort_rounded),
             onPressed: onSortTap,
-            tooltip: 'Sort',
+            tooltip: context.tr('Sort'),
           ),
           IconButton(
             icon: const Icon(Icons.play_circle_outline_rounded),
             onPressed: onPlayFolderAsReelsTap,
-            tooltip: 'Play current folder as Reels',
+            tooltip: context.tr('Play current folder as Reels'),
           ),
           IconButton(
             icon: const Icon(Icons.search_rounded),
             onPressed: onSearchTap,
-            tooltip: 'Search',
+            tooltip: context.tr('Search'),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 class SettingsHeader extends StatelessWidget {
@@ -10,7 +11,7 @@ class SettingsHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Text(
-        'Settings',
+        context.tr('Settings'),
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w800,

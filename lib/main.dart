@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_mpv/flutter_mpv.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/l10n/app_localizations.dart';
 import 'features/downloader/controller/downloader_controller.dart';
 import 'features/downloader/services/downloader_settings_service.dart';
 import 'features/settings/controllers/app_settings_controller.dart';
@@ -97,6 +99,12 @@ class _MPxPlayerState extends State<MPxPlayer> {
 
           return MaterialApp(
             title: 'MPx Player',
+            locale: settings.locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
             debugShowCheckedModeBanner: false,
             navigatorObservers: [HomeFAB.routeObserver],
             theme: AppTheme.light(),

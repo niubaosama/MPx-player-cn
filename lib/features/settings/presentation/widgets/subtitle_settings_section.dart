@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 import '../../services/subtitle_settings_service.dart';
 import '../helpers/settings_helpers.dart';
@@ -51,7 +52,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
         children: [
           SettingsSliderRow(
             icon: Icons.format_size,
-            title: 'Font size',
+            title: context.tr('Font size'),
             value: '${_subtitleFontSize.round()} pt',
             sliderValue: _subtitleFontSize,
             min: 16,
@@ -63,7 +64,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
           ),
           SettingsInfoRow(
             icon: Icons.font_download_outlined,
-            title: 'Font type',
+            title: context.tr('Font type'),
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -84,7 +85,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
           ),
           SettingsInfoRow(
             icon: Icons.format_bold,
-            title: 'Font weight',
+            title: context.tr('Font weight'),
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -96,7 +97,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
               ]
                   .map(
                     (weight) => ChoiceChip(
-                      label: Text(SettingsFontWeightHelpers.getLabel(weight)),
+                      label: Text(context.tr(SettingsFontWeightHelpers.getLabel(weight))),
                       selected: _subtitleFontWeight == weight,
                       onSelected: (_) async {
                         await SubtitleSettingsService.setFontWeight(weight);
@@ -109,7 +110,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
           ),
           SettingsInfoRow(
             icon: Icons.palette_outlined,
-            title: 'Text color',
+            title: context.tr('Text color'),
             child: Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -129,8 +130,8 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
           ),
           SettingsSwitchRow(
             icon: Icons.rectangle_outlined,
-            title: 'Background plate',
-            subtitle: 'Add contrast behind subtitle text',
+            title: context.tr('Background plate'),
+            subtitle: context.tr('Add contrast behind subtitle text'),
             value: _subtitleHasBackground,
             onChanged: (value) async {
               await SubtitleSettingsService.setHasBackground(value);
@@ -140,7 +141,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
           if (_subtitleHasBackground)
             SettingsSliderRow(
               icon: Icons.opacity,
-              title: 'Background opacity',
+              title: context.tr('Background opacity'),
               value: '${(_subtitleBackgroundOpacity * 100).round()}%',
               sliderValue: _subtitleBackgroundOpacity,
               min: 0.2,
@@ -152,7 +153,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
             ),
           SettingsSliderRow(
             icon: Icons.vertical_align_bottom,
-            title: 'Bottom spacing',
+            title: context.tr('Bottom spacing'),
             value: '${_subtitleBottomPadding.round()} px',
             sliderValue: _subtitleBottomPadding,
             min: 12,
@@ -193,7 +194,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
                 });
               },
               icon: const Icon(Icons.restart_alt),
-              label: const Text('Reset subtitles'),
+              label: Text(context.tr('Reset subtitles')),
             ),
           ),
         ],

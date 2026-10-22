@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class SplashSubtitle extends StatelessWidget {
@@ -9,7 +10,7 @@ class SplashSubtitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Text(
-      'Fast video browsing, clean playback',
+      context.tr('Fast video browsing, clean playback'),
       style: GoogleFonts.manrope(
         fontSize: 12,
         fontWeight: FontWeight.w700,

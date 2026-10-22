@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../controller/file_browser_controller.dart';
 
@@ -26,14 +27,14 @@ void showHomeSortSheet(BuildContext context, FileBrowserController controller) {
                       borderRadius: BorderRadius.circular(2))),
               Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text('Sort By',
+                  child: Text(context.tr('Sort By'),
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: theme.strongText))),
               SortTile(
                   icon: Icons.sort_by_alpha_rounded,
-                  label: 'Name',
+                  label: context.tr('Name'),
                   selected: controller.sortBy == SortBy.name,
                   ascending: controller.sortOrder == SortOrder.ascending,
                   onTap: () {
@@ -42,7 +43,7 @@ void showHomeSortSheet(BuildContext context, FileBrowserController controller) {
                   }),
               SortTile(
                   icon: Icons.schedule_rounded,
-                  label: 'Date',
+                  label: context.tr('Date'),
                   selected: controller.sortBy == SortBy.date,
                   ascending: controller.sortOrder == SortOrder.ascending,
                   onTap: () {
@@ -51,7 +52,7 @@ void showHomeSortSheet(BuildContext context, FileBrowserController controller) {
                   }),
               SortTile(
                   icon: Icons.data_usage_rounded,
-                  label: 'Size',
+                  label: context.tr('Size'),
                   selected: controller.sortBy == SortBy.size,
                   ascending: controller.sortOrder == SortOrder.ascending,
                   onTap: () {
@@ -60,7 +61,7 @@ void showHomeSortSheet(BuildContext context, FileBrowserController controller) {
                   }),
               SortTile(
                   icon: Icons.video_library_outlined,
-                  label: 'Video Count',
+                  label: context.tr('Video Count'),
                   selected: controller.sortBy == SortBy.videos,
                   ascending: controller.sortOrder == SortOrder.ascending,
                   onTap: () {

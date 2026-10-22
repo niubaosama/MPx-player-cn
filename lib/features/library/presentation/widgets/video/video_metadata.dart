@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../domain/entities/video_file.dart';
 import '../../../services/video_metadata_service.dart';
@@ -165,7 +166,7 @@ class _VideoMetadataState extends State<VideoMetadata> {
                   ),
                 )
               : Text(
-                  _resolution ?? widget.video.resolution,
+                  context.tr(_resolution ?? widget.video.resolution),
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -190,7 +191,7 @@ class _VideoMetadataState extends State<VideoMetadata> {
           ),
         ),
         Text(
-          '• ${widget.video.formattedDate}',
+          '• ${context.l10n.relativeDate(widget.video.dateAdded)}',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,

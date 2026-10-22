@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class SplashProgressBar extends StatelessWidget {
@@ -54,7 +55,7 @@ class SplashProgressBar extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Loading your library shell',
+                context.tr('Loading your library shell'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

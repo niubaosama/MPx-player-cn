@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../helpers/subtitle_font_helpers.dart';
 
 /// Preview widget showing how subtitles will appear with current settings
@@ -38,9 +39,9 @@ class SubtitlePreview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Preview',
-            style: TextStyle(
+          Text(
+            context.tr('Preview'),
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -59,7 +60,7 @@ class SubtitlePreview extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Text(
-                  'This is how your subtitles will look',
+                  context.tr('This is how your subtitles will look'),
                   textAlign: TextAlign.center,
                   style: SubtitleFontHelpers.textStyle(
                     fontFamily,

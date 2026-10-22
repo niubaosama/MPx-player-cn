@@ -64,7 +64,7 @@ object ShareDownloadRegistry {
 object PublicMediaExporter {
     fun exportToPublicPath(context: Context, sourcePath: String, preferredPath: String): String {
         val sourceFile = File(sourcePath)
-        require(sourceFile.exists()) { "Downloaded file not found: $sourcePath" }
+        require(sourceFile.exists()) { context.appString(R.string.download_file_missing, sourcePath) }
 
         val displayName = sourceFile.name
         val extension = sourceFile.extension.lowercase(Locale.US)
@@ -89,11 +89,11 @@ object PublicMediaExporter {
         }
         val resolver = context.contentResolver
         val uri = resolver.insert(collection, values)
-            ?: throw IllegalStateException("Failed to create public media entry")
+            ?: throw IllegalStateException(context.appString(R.string.media_entry_failed))
 
         resolver.openOutputStream(uri)?.use { output ->
             sourceFile.inputStream().use { input -> input.copyTo(output) }
-        } ?: throw IllegalStateException("Failed to open output stream for exported media")
+        } ?: throw IllegalStateException(context.appString(R.string.media_export_failed))
 
         val publishValues = ContentValues().apply {
             put(MediaStore.MediaColumns.IS_PENDING, 0)

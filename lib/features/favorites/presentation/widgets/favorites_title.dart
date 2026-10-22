@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class FavoritesTitle extends StatelessWidget {
@@ -13,7 +14,7 @@ class FavoritesTitle extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Favorites',
+          context.tr('Favorites'),
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w800,
@@ -24,8 +25,8 @@ class FavoritesTitle extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           videoCount == 0
-              ? 'Your saved videos live here'
-              : '$videoCount saved ${videoCount == 1 ? 'video' : 'videos'} ready to play',
+              ? context.tr('Your saved videos live here')
+              : context.tr('{value0} saved {value1} ready to play', {'value0': videoCount, 'value1': videoCount == 1 ? 'video' : 'videos'}),
           style: TextStyle(
             fontSize: 14,
             color: theme.mutedText,

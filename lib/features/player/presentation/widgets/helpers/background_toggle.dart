@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../controller/player_controller.dart';
 
 class BackgroundToggle extends StatelessWidget {
@@ -15,7 +16,7 @@ class BackgroundToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       title:
-          const Text('Text Background', style: TextStyle(color: Colors.white)),
+          Text(context.tr('Text Background'), style: const TextStyle(color: Colors.white)),
       value: controller.subtitleHasBackground,
       onChanged: (value) {
         controller.setSubtitleBackground(value);

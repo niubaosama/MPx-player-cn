@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/features/reels/controllers/reels_controller.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
@@ -23,21 +24,21 @@ class ReelsSortMenu extends StatelessWidget {
         icon: Icon(Icons.sort_rounded, color: theme.strongText),
         onSelected: onSortSelected,
         itemBuilder: (context) => [
-          const PopupMenuItem(
+           PopupMenuItem(
             value: ReelsSortOrder.dateDesc,
-            child: Text('Newest First'),
+            child: Text(context.tr('Newest First')),
           ),
-          const PopupMenuItem(
+           PopupMenuItem(
             value: ReelsSortOrder.dateAsc,
-            child: Text('Oldest First'),
+            child: Text(context.tr('Oldest First')),
           ),
-          const PopupMenuItem(
+           PopupMenuItem(
             value: ReelsSortOrder.nameAsc,
-            child: Text('By Name'),
+            child: Text(context.tr('By Name')),
           ),
-          const PopupMenuItem(
+           PopupMenuItem(
             value: ReelsSortOrder.shuffle,
-            child: Text('Shuffle'),
+            child: Text(context.tr('Shuffle')),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class FavoritesHeader extends StatelessWidget {
@@ -24,7 +25,7 @@ class FavoritesHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Favorites',
+            context.tr('Favorites'),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
@@ -35,7 +36,7 @@ class FavoritesHeader extends StatelessWidget {
           if (videoCount > 0) ...[
             const SizedBox(height: 2),
             Text(
-              '$videoCount saved videos',
+              context.tr('{value0} saved videos', {'value0': videoCount}),
               style: TextStyle(
                 fontSize: 13,
                 color: theme.mutedText,
@@ -63,7 +64,7 @@ class FavoritesHeader extends StatelessWidget {
         onChanged: onSearchChanged,
         style: TextStyle(fontSize: 14, color: theme.strongText),
         decoration: InputDecoration(
-          hintText: 'Search favorites...',
+          hintText: context.tr('Search favorites...'),
           hintStyle: TextStyle(color: theme.faintText, fontSize: 14),
           prefixIcon: Icon(Icons.search, color: theme.faintText, size: 20),
           suffixIcon: searchQuery.isNotEmpty

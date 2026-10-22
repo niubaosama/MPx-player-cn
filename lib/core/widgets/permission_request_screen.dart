@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/services/permission_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -67,9 +68,9 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              const Text(
-                'Storage Access Required',
-                style: TextStyle(
+              Text(
+                context.tr('Storage Access Required'),
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
@@ -77,7 +78,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'MPx Player needs access to your videos to play them.',
+                context.tr('MPx Player needs access to your videos to play them.'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -107,9 +108,9 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Grant Access',
-                          style: TextStyle(
+                      : Text(
+                          context.tr('Grant Access'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -121,7 +122,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen> {
                 onPressed: () async {
                   await PermissionService.openSettings();
                 },
-                child: const Text('Open Settings'),
+                child: Text(context.tr('Open Settings')),
               ),
             ],
           ),

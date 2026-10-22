@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 import 'package:mpx/features/settings/presentation/helpers/subtitle_font_helpers.dart';
 import '../../controller/player_controller.dart';
@@ -21,20 +22,20 @@ class SubtitleSettingsSheet extends StatefulWidget {
 class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
   bool _isLoading = false;
 
-  String _trackLabel(SubtitleTrackInfo track, int index) {
+  String _trackLabel(BuildContext context, SubtitleTrackInfo track, int index) {
     final title = track.title?.trim();
     final language = track.language?.trim();
 
     if (title != null && title.isNotEmpty) return title;
     if (language != null && language.isNotEmpty) return language.toUpperCase();
-    return 'Subtitle ${index + 1}';
+    return context.tr('Subtitle {value0}', {'value0': index + 1});
   }
 
-  String _weightLabel(FontWeight weight) {
-    if (weight == FontWeight.w400) return 'Regular';
-    if (weight == FontWeight.w600) return 'Semi-bold';
-    if (weight == FontWeight.w700) return 'Bold';
-    return 'Medium';
+  String _weightLabel(BuildContext context, FontWeight weight) {
+    if (weight == FontWeight.w400) return context.tr('Regular');
+    if (weight == FontWeight.w600) return context.tr('Semi-bold');
+    if (weight == FontWeight.w700) return context.tr('Bold');
+    return context.tr('Medium');
   }
 
   Future<void> _loadExternalSubtitle(BuildContext context) async {
@@ -59,7 +60,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Subtitle loaded: ${result.files.single.name}'),
+              content: Text(context.tr('Subtitle loaded: {value0}', {'value0': result.files.single.name})),
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
             ),
@@ -70,7 +71,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load subtitle: $e'),
+            content: Text(context.tr('Failed to load subtitle: {value0}', {'value0': e})),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
@@ -112,7 +113,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
                     child: Text(
-                      'Subtitle Settings',
+                      context.tr('Subtitle Settings'),
                       style: TextStyle(
                         color: theme.strongText,
                         fontSize: 18,
@@ -123,12 +124,12 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Text(
-                      'Choose a subtitle track and tune how captions look on screen.',
+                      context.tr('Choose a subtitle track and tune how captions look on screen.'),
                       style: TextStyle(color: theme.mutedText, fontSize: 12),
                     ),
                   ),
                   _Section(
-                    title: 'Track',
+                    title: context.tr('Track'),
                     child: Column(
                       children: [
                         SwitchListTile.adaptive(
@@ -138,13 +139,13 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                           activeTrackColor:
                               theme.colorScheme.primary.withValues(alpha: 0.32),
                           title: Text(
-                            'Enable subtitles',
+                            context.tr('Enable subtitles'),
                             style: TextStyle(color: theme.strongText),
                           ),
                           subtitle: Text(
                             tracks.isEmpty
-                                ? 'No subtitle tracks found for this video'
-                                : '${tracks.length} subtitle track${tracks.length == 1 ? '' : 's'} available',
+                                ? context.tr('No subtitle tracks found for this video')
+                                : context.tr('{value0} subtitle track{value1} available', {'value0': tracks.length, 'value1': tracks.length == 1 ? '' : 's'}),
                             style: TextStyle(
                               color: theme.mutedText,
                               fontSize: 12,
@@ -158,11 +159,11 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                               color: theme.strongText,
                             ),
                             title: Text(
-                              'Subtitle track',
+                              context.tr('Subtitle track'),
                               style: TextStyle(color: theme.strongText),
                             ),
                             subtitle: Text(
-                              'Pick the subtitle stream for this video',
+                              context.tr('Pick the subtitle stream for this video'),
                               style: TextStyle(
                                 color: theme.mutedText,
                                 fontSize: 12,
@@ -172,11 +173,11 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                               label: ctrl.currentSubtitleTrackIndex >= 0 &&
                                       ctrl.currentSubtitleTrackIndex <
                                           tracks.length
-                                  ? _trackLabel(
+                                  ? _trackLabel(context, 
                                       tracks[ctrl.currentSubtitleTrackIndex],
                                       ctrl.currentSubtitleTrackIndex,
                                     )
-                                  : 'Auto',
+                                  : context.tr('Auto'),
                             ),
                             onTap: () {
                               showModalBottomSheet(
@@ -185,7 +186,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                                 builder: (ctx) => _SubtitleTrackSheet(
                                   tracks: tracks,
                                   currentIndex: ctrl.currentSubtitleTrackIndex,
-                                  labelBuilder: _trackLabel,
+                                  labelBuilder: (track, index) => _trackLabel(context, track, index),
                                   onSelected: (index) {
                                     ctrl.setSubtitleTrack(index);
                                     Navigator.pop(ctx);
@@ -207,11 +208,11 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                                   color: Colors.white,
                                 ),
                           title: Text(
-                            'Load external subtitle',
+                            context.tr('Load external subtitle'),
                             style: TextStyle(color: theme.strongText),
                           ),
                           subtitle: Text(
-                            'Pick a .srt, .ass, or other subtitle file',
+                            context.tr('Pick a .srt, .ass, or other subtitle file'),
                             style: TextStyle(
                               color: theme.mutedText,
                               fontSize: 12,
@@ -226,11 +227,11 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                   ),
                   if (ctrl.subtitlesEnabled) ...[
                     _Section(
-                      title: 'Appearance',
+                      title: context.tr('Appearance'),
                       child: Column(
                         children: [
                           _SliderTile(
-                            title: 'Font size',
+                            title: context.tr('Font size'),
                             value: ctrl.subtitleFontSize,
                             min: 16,
                             max: 72,
@@ -243,7 +244,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                               color: theme.strongText,
                             ),
                             title: Text(
-                              'Font type',
+                              context.tr('Font type'),
                               style: TextStyle(color: theme.strongText),
                             ),
                             subtitle: Text(
@@ -274,16 +275,16 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                             leading: Icon(Icons.format_bold,
                                 color: theme.strongText),
                             title: Text(
-                              'Font weight',
+                              context.tr('Font weight'),
                               style: TextStyle(color: theme.strongText),
                             ),
                             subtitle: Text(
-                              'Make captions lighter or heavier',
+                              context.tr('Make captions lighter or heavier'),
                               style: TextStyle(
                                   color: theme.mutedText, fontSize: 12),
                             ),
                             trailing: _ValueChip(
-                              label: _weightLabel(ctrl.subtitleFontWeight),
+                              label: _weightLabel(context, ctrl.subtitleFontWeight),
                             ),
                             onTap: () {
                               showModalBottomSheet(
@@ -307,18 +308,18 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                             activeTrackColor: theme.colorScheme.primary
                                 .withValues(alpha: 0.32),
                             title: Text(
-                              'Background box',
+                              context.tr('Background box'),
                               style: TextStyle(color: theme.strongText),
                             ),
                             subtitle: Text(
-                              'Add a dark plate behind subtitle text',
+                              context.tr('Add a dark plate behind subtitle text'),
                               style: TextStyle(
                                   color: theme.mutedText, fontSize: 12),
                             ),
                           ),
                           if (ctrl.subtitleHasBackground)
                             _SliderTile(
-                              title: 'Background opacity',
+                              title: context.tr('Background opacity'),
                               value: ctrl.subtitleBackgroundOpacity,
                               min: 0.2,
                               max: 1.0,
@@ -327,7 +328,7 @@ class _SubtitleSettingsSheetState extends State<SubtitleSettingsSheet> {
                               onChanged: ctrl.setSubtitleBackgroundOpacity,
                             ),
                           _SliderTile(
-                            title: 'Bottom spacing',
+                            title: context.tr('Bottom spacing'),
                             value: ctrl.subtitleBottomPadding,
                             min: 12,
                             max: 80,
@@ -474,7 +475,7 @@ class _ColorTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Color',
+            context.tr('Color'),
             style: TextStyle(
               color: theme.strongText,
               fontSize: 14,
@@ -536,7 +537,7 @@ class _PreviewCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Preview',
+              context.tr('Preview'),
               style: TextStyle(
                 color: theme.mutedText,
                 fontSize: 12,
@@ -555,7 +556,7 @@ class _PreviewCard extends StatelessWidget {
                       )
                     : Colors.transparent,
                 child: Text(
-                  'This is how your subtitles will look',
+                  context.tr('This is how your subtitles will look'),
                   textAlign: TextAlign.center,
                   style: SubtitleFontHelpers.textStyle(
                     controller.subtitleFontFamily,
@@ -646,7 +647,7 @@ class _SubtitleTrackSheet extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Subtitle Tracks',
+                    context.tr('Subtitle Tracks'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -715,11 +716,11 @@ class _SubtitleWeightSheet extends StatelessWidget {
     FontWeight.w700,
   ];
 
-  String _label(FontWeight weight) {
-    if (weight == FontWeight.w400) return 'Regular';
-    if (weight == FontWeight.w600) return 'Semi-bold';
-    if (weight == FontWeight.w700) return 'Bold';
-    return 'Medium';
+  String _label(BuildContext context, FontWeight weight) {
+    if (weight == FontWeight.w400) return context.tr('Regular');
+    if (weight == FontWeight.w600) return context.tr('Semi-bold');
+    if (weight == FontWeight.w700) return context.tr('Bold');
+    return context.tr('Medium');
   }
 
   @override
@@ -745,7 +746,7 @@ class _SubtitleWeightSheet extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Font Weight',
+                    context.tr('Font Weight'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -763,7 +764,7 @@ class _SubtitleWeightSheet extends StatelessWidget {
                   final isSelected = weight == currentWeight;
                   return ListTile(
                     title: Text(
-                      _label(weight),
+                      _label(context, weight),
                       style: TextStyle(
                         color: isSelected ? theme.strongText : theme.mutedText,
                         fontWeight: weight,
@@ -817,7 +818,7 @@ class _SubtitleFontFamilySheet extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Font Type',
+                    context.tr('Font Type'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,

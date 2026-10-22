@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme_tokens.dart';
 import '../../domain/entities/watch_history_entry.dart';
 import '../../services/history_service.dart';
@@ -93,18 +94,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear History'),
+        title: Text(context.tr('Clear History')),
         content:
-            const Text('Are you sure you want to clear all watch history?'),
+            Text(context.tr('Are you sure you want to clear all watch history?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Clear'),
+            child: Text(context.tr('Clear')),
           ),
         ],
       ),

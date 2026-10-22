@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class CustomFolderBackHint extends StatelessWidget {
   const CustomFolderBackHint({super.key});
@@ -16,9 +17,9 @@ class CustomFolderBackHint extends StatelessWidget {
           color: Colors.black.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Text(
-          'Tap back to return',
-          style: TextStyle(
+        child: Text(
+          context.tr('Tap back to return'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 11,
             fontWeight: FontWeight.w600,

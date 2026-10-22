@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class HistoryHeader extends StatelessWidget {
@@ -31,7 +32,7 @@ class HistoryHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'History',
+                      context.tr('History'),
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
@@ -42,7 +43,7 @@ class HistoryHeader extends StatelessWidget {
                     if (videoCount > 0) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '$videoCount recently watched',
+                        context.tr('{value0} recently watched', {'value0': videoCount}),
                         style: TextStyle(
                           fontSize: 13,
                           color: theme.mutedText,
@@ -63,14 +64,14 @@ class HistoryHeader extends StatelessWidget {
                       color: Colors.red.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.delete_outline, color: Colors.red, size: 14),
-                        SizedBox(width: 4),
+                        const Icon(Icons.delete_outline, color: Colors.red, size: 14),
+                        const SizedBox(width: 4),
                         Text(
-                          'Clear',
-                          style: TextStyle(
+                          context.tr('Clear'),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -102,7 +103,7 @@ class HistoryHeader extends StatelessWidget {
         onChanged: onSearchChanged,
         style: TextStyle(fontSize: 14, color: theme.strongText),
         decoration: InputDecoration(
-          hintText: 'Search history...',
+          hintText: context.tr('Search history...'),
           hintStyle: TextStyle(color: theme.faintText, fontSize: 14),
           prefixIcon: Icon(Icons.search, color: theme.faintText, size: 20),
           suffixIcon: searchQuery.isNotEmpty

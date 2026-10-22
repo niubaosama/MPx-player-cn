@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 import '../../domain/entities/download_item.dart';
@@ -158,7 +159,11 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.title,
+                          item.title.isEmpty
+                              ? context.tr(item.status == DownloadStatus.queued
+                                  ? 'Pending download'
+                                  : 'Untitled')
+                              : item.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
@@ -278,7 +283,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          item.errorMessage!,
+                          context.tr(item.errorMessage!),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.error,
                           ),
@@ -306,13 +311,13 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                       _buildDetailRow(
                         context,
                         icon: Icons.link_rounded,
-                        label: 'URL',
+                        label: context.tr('URL'),
                         value: item.url,
                         onTap: () {
                           Clipboard.setData(ClipboardData(text: item.url));
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('URL copied')),
+                              SnackBar(content: Text(context.tr('URL copied'))),
                             );
                           }
                         },
@@ -322,7 +327,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                         _buildDetailRow(
                           context,
                           icon: Icons.folder_rounded,
-                          label: 'Path',
+                          label: context.tr('Path'),
                           value: item.savePath!,
                         ),
                       ],
@@ -331,7 +336,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                         _buildDetailRow(
                           context,
                           icon: Icons.high_quality_rounded,
-                          label: 'Format',
+                          label: context.tr('Format'),
                           value: item.formatSelector!,
                         ),
                       ],
@@ -339,7 +344,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
                       _buildDetailRow(
                         context,
                         icon: Icons.access_time_rounded,
-                        label: 'Added',
+                        label: context.tr('Added'),
                         value: _formatFullTime(item.addedAt),
                       ),
                     ],
@@ -411,32 +416,32 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
     switch (status) {
       case DownloadStatus.completed:
         color = Colors.green;
-        label = 'Completed';
+        label = context.tr('Completed');
         icon = Icons.check_circle_rounded;
         break;
       case DownloadStatus.downloading:
         color = theme.colorScheme.primary;
-        label = 'Downloading';
+        label = context.tr('Downloading');
         icon = Icons.download_rounded;
         break;
       case DownloadStatus.queued:
         color = theme.colorScheme.tertiary;
-        label = 'Queued';
+        label = context.tr('Queued');
         icon = Icons.hourglass_empty_rounded;
         break;
       case DownloadStatus.paused:
         color = Colors.orange;
-        label = 'Paused';
+        label = context.tr('Paused');
         icon = Icons.pause_circle_rounded;
         break;
       case DownloadStatus.failed:
         color = theme.colorScheme.error;
-        label = 'Failed';
+        label = context.tr('Failed');
         icon = Icons.error_rounded;
         break;
       case DownloadStatus.cancelled:
         color = theme.faintText;
-        label = 'Cancelled';
+        label = context.tr('Cancelled');
         icon = Icons.cancel_rounded;
         break;
     }
@@ -480,7 +485,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
             OutlinedButton.icon(
               onPressed: widget.onPause,
               icon: const Icon(Icons.pause_rounded, size: 18),
-              label: const Text('Pause'),
+              label: Text(context.tr('Pause')),
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -493,7 +498,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
             FilledButton.icon(
               onPressed: widget.onResume,
               icon: const Icon(Icons.play_arrow_rounded, size: 18),
-              label: const Text('Resume'),
+              label: Text(context.tr('Resume')),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -506,7 +511,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
           TextButton.icon(
             onPressed: widget.onCancel,
             icon: const Icon(Icons.close_rounded, size: 16),
-            label: const Text('Cancel'),
+            label: Text(context.tr('Cancel')),
             style: TextButton.styleFrom(
               foregroundColor: theme.colorScheme.error,
             ),
@@ -516,7 +521,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
           FilledButton.icon(
             onPressed: widget.onRetry,
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Retry'),
+            label: Text(context.tr('Retry')),
             style: FilledButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               shape: RoundedRectangleBorder(
@@ -529,7 +534,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
           TextButton.icon(
             onPressed: widget.onDelete,
             icon: const Icon(Icons.delete_outline_rounded, size: 16),
-            label: const Text('Delete'),
+            label: Text(context.tr('Delete')),
             style: TextButton.styleFrom(
               foregroundColor: theme.colorScheme.error,
             ),
@@ -540,7 +545,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
             FilledButton.icon(
               onPressed: widget.onPlay,
               icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
-              label: const Text('Play'),
+              label: Text(context.tr('Play')),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -553,7 +558,7 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
           OutlinedButton.icon(
             onPressed: widget.onDelete,
             icon: const Icon(Icons.delete_outline_rounded, size: 16),
-            label: const Text('Delete'),
+            label: Text(context.tr('Delete')),
             style: OutlinedButton.styleFrom(
               foregroundColor: theme.colorScheme.error,
               side: BorderSide(
@@ -597,10 +602,10 @@ class _DownloadProgressTileState extends State<DownloadProgressTile> {
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return context.tr('just now');
+    if (diff.inHours < 1) return context.tr('{value0}m ago', {'value0': diff.inMinutes});
+    if (diff.inDays < 1) return context.tr('{value0}h ago', {'value0': diff.inHours});
+    if (diff.inDays < 7) return context.tr('{value0}d ago', {'value0': diff.inDays});
     return '${time.day}/${time.month}/${time.year}';
   }
 

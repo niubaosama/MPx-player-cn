@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 import '../../controller/player_controller.dart';
 import 'helpers/bottom_sheet_handle.dart';
@@ -13,16 +14,16 @@ class SettingsSheet extends StatelessWidget {
     this.onOpenSubtitleSettings,
   });
 
-  String _formatAspectRatio(PlayerController controller) {
-    return controller.getAspectRatioLabel(controller.aspectRatioMode);
+  String _formatAspectRatio(BuildContext context, PlayerController controller) {
+    return context.tr(controller.getAspectRatioLabel(controller.aspectRatioMode));
   }
 
-  String _formatRepeatMode(PlayerController controller) {
-    return controller.getRepeatModeLabel(controller.repeatMode);
+  String _formatRepeatMode(BuildContext context, PlayerController controller) {
+    return context.tr(controller.getRepeatModeLabel(controller.repeatMode));
   }
 
-  String _formatAudioTrack(PlayerController controller) {
-    if (controller.audioTracks.isEmpty) return 'Default';
+  String _formatAudioTrack(BuildContext context, PlayerController controller) {
+    if (controller.audioTracks.isEmpty) return context.tr('Default');
 
     final safeIndex = controller.currentAudioTrackIndex < 0
         ? 0
@@ -36,13 +37,13 @@ class SettingsSheet extends StatelessWidget {
 
     if (title != null && title.isNotEmpty) return title;
     if (language != null && language.isNotEmpty) return language.toUpperCase();
-    return 'Track ${safeIndex + 1}';
+    return context.tr('Track {value0}', {'value0': safeIndex + 1});
   }
 
-  String _formatSensitivity(double sensitivity) {
-    if (sensitivity <= 0.15) return 'Low';
-    if (sensitivity <= 0.4) return 'Medium';
-    return 'High';
+  String _formatSensitivity(BuildContext context, double sensitivity) {
+    if (sensitivity <= 0.15) return context.tr('Low');
+    if (sensitivity <= 0.4) return context.tr('Medium');
+    return context.tr('High');
   }
 
   @override
@@ -67,7 +68,7 @@ class SettingsSheet extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
                     child: Text(
-                      'Player Settings',
+                      context.tr('Player Settings'),
                       style: TextStyle(
                         color: theme.strongText,
                         fontSize: 18,
@@ -78,7 +79,7 @@ class SettingsSheet extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Text(
-                      'Keep the screen clean and put the extra controls here.',
+                      context.tr('Keep the screen clean and put the extra controls here.'),
                       style: TextStyle(
                         color: theme.mutedText,
                         fontSize: 12,
@@ -86,13 +87,13 @@ class SettingsSheet extends StatelessWidget {
                     ),
                   ),
                   _SettingsSection(
-                    title: 'Playback',
+                    title: context.tr('Playback'),
                     child: Column(
                       children: [
                         _SettingsTile(
                           icon: Icons.speed,
-                          title: 'Playback speed',
-                          subtitle: 'Change the current speed',
+                          title: context.tr('Playback speed'),
+                          subtitle: context.tr('Change the current speed'),
                           value: '${controller.playbackSpeed}x',
                           onTap: () {
                             showModalBottomSheet(
@@ -107,23 +108,23 @@ class SettingsSheet extends StatelessWidget {
                         ),
                         _SettingsTile(
                           icon: Icons.aspect_ratio,
-                          title: 'Aspect ratio',
-                          subtitle: 'Fit, fill, stretch, and classic ratios',
-                          value: _formatAspectRatio(controller),
+                          title: context.tr('Aspect ratio'),
+                          subtitle: context.tr('Fit, fill, stretch, and classic ratios'),
+                          value: _formatAspectRatio(context, controller),
                           onTap: controller.cycleAspectRatio,
                         ),
                         _SettingsTile(
                           icon: Icons.repeat,
-                          title: 'Repeat mode',
-                          subtitle: 'Choose what happens at the end',
-                          value: _formatRepeatMode(controller),
+                          title: context.tr('Repeat mode'),
+                          subtitle: context.tr('Choose what happens at the end'),
+                          value: _formatRepeatMode(context, controller),
                           onTap: controller.cycleRepeatMode,
                         ),
                         _SettingsTile(
                           icon: Icons.touch_app,
-                          title: 'Double tap seek',
-                          subtitle: 'Seconds to skip per tap',
-                          value: '${controller.doubleTapSeekStep}s',
+                          title: context.tr('Double tap seek'),
+                          subtitle: context.tr('Seconds to skip per tap'),
+                          value: context.tr('{value0}s', {'value0': controller.doubleTapSeekStep}),
                           onTap: () {
                             showModalBottomSheet(
                               context: context,
@@ -137,9 +138,9 @@ class SettingsSheet extends StatelessWidget {
                         ),
                         _SettingsTile(
                           icon: Icons.swipe,
-                          title: 'Drag sensitivity',
-                          subtitle: 'How much seek distance covers',
-                          value: _formatSensitivity(
+                          title: context.tr('Drag sensitivity'),
+                          subtitle: context.tr('How much seek distance covers'),
+                          value: _formatSensitivity(context, 
                               controller.dragSeekSensitivity),
                           onTap: () {
                             showModalBottomSheet(
@@ -159,17 +160,17 @@ class SettingsSheet extends StatelessWidget {
                     ),
                   ),
                   _SettingsSection(
-                    title: 'Tracks & Screen',
+                    title: context.tr('Tracks & Screen'),
                     child: Column(
                       children: [
                         if (onOpenSubtitleSettings != null)
                           _SettingsTile(
                             icon: Icons.subtitles_outlined,
-                            title: 'Subtitle settings',
+                            title: context.tr('Subtitle settings'),
                             subtitle: controller.subtitlesEnabled
-                                ? 'Customize subtitles'
-                                : 'Subtitles are currently off',
-                            value: controller.subtitlesEnabled ? 'On' : 'Off',
+                                ? context.tr('Customize subtitles')
+                                : context.tr('Subtitles are currently off'),
+                            value: controller.subtitlesEnabled ? context.tr('On') : context.tr('Off'),
                             onTap: () {
                               Navigator.pop(context);
                               onOpenSubtitleSettings!();
@@ -178,9 +179,9 @@ class SettingsSheet extends StatelessWidget {
                         if (controller.audioTracks.length > 1)
                           _SettingsTile(
                             icon: Icons.audiotrack,
-                            title: 'Audio track',
-                            subtitle: 'Switch language or commentary track',
-                            value: _formatAudioTrack(controller),
+                            title: context.tr('Audio track'),
+                            subtitle: context.tr('Switch language or commentary track'),
+                            value: _formatAudioTrack(context, controller),
                             onTap: () {
                               showModalBottomSheet(
                                 context: context,
@@ -205,19 +206,19 @@ class SettingsSheet extends StatelessWidget {
                           icon: controller.isFullscreen
                               ? Icons.fullscreen_exit
                               : Icons.fullscreen,
-                          title: 'Screen mode',
-                          subtitle: 'Toggle portrait and landscape player',
+                          title: context.tr('Screen mode'),
+                          subtitle: context.tr('Toggle portrait and landscape player'),
                           value:
-                              controller.isFullscreen ? 'Fullscreen' : 'Inline',
+                              controller.isFullscreen ? context.tr('Fullscreen') : context.tr('Inline'),
                           onTap: controller.toggleFullscreen,
                         ),
                         _SettingsTile(
                           icon: controller.isLocked
                               ? Icons.lock
                               : Icons.lock_open,
-                          title: 'Lock controls',
-                          subtitle: 'Prevent accidental touches while watching',
-                          value: controller.isLocked ? 'Locked' : 'Unlocked',
+                          title: context.tr('Lock controls'),
+                          subtitle: context.tr('Prevent accidental touches while watching'),
+                          value: controller.isLocked ? context.tr('Locked') : context.tr('Unlocked'),
                           onTap: () {
                             controller.toggleLock();
                             Navigator.pop(context);
@@ -229,7 +230,7 @@ class SettingsSheet extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                     child: Text(
-                      'Tip: tap the center of the video to show or hide controls.',
+                      context.tr('Tip: tap the center of the video to show or hide controls.'),
                       style: TextStyle(
                         color: theme.mutedText,
                         fontSize: 12,
@@ -339,7 +340,7 @@ class _VolumeTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Volume',
+            context.tr('Volume'),
             style: TextStyle(
               color: theme.strongText,
               fontSize: 14,
@@ -449,7 +450,7 @@ class _SettingsSpeedSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Playback Speed',
+                    context.tr('Playback Speed'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -479,7 +480,7 @@ class _SettingsSpeedSheet extends StatelessWidget {
 
                   return ListTile(
                     title: Text(
-                      speed == 1.0 ? 'Normal' : '${speed}x',
+                      speed == 1.0 ? context.tr('Normal') : '${speed}x',
                       style: TextStyle(
                         color: isSelected ? theme.strongText : theme.mutedText,
                         fontSize: 16,
@@ -553,7 +554,7 @@ class _AudioTrackSheetState extends State<_AudioTrackSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Audio Track',
+                    context.tr('Audio Track'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -563,7 +564,7 @@ class _AudioTrackSheetState extends State<_AudioTrackSheet> {
                   Row(
                     children: [
                       Text(
-                        '${widget.audioTracks.length} tracks',
+                        context.tr('{value0} tracks', {'value0': widget.audioTracks.length}),
                         style: TextStyle(
                           color: theme.mutedText,
                           fontSize: 14,
@@ -580,7 +581,7 @@ class _AudioTrackSheetState extends State<_AudioTrackSheet> {
                               )
                             : const Icon(Icons.refresh, size: 20),
                         onPressed: _refreshing ? null : _handleRefresh,
-                        tooltip: 'Refresh tracks',
+                        tooltip: context.tr('Refresh tracks'),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -602,7 +603,7 @@ class _AudioTrackSheetState extends State<_AudioTrackSheet> {
                     title: Text(
                       track.title?.trim().isNotEmpty == true
                           ? track.title!
-                          : 'Track ${index + 1}',
+                          : context.tr('Track {value0}', {'value0': index + 1}),
                       style: TextStyle(
                         color: isSelected ? theme.strongText : theme.mutedText,
                         fontSize: 16,
@@ -666,7 +667,7 @@ class _SeekStepSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Double Tap Seek Step',
+                    context.tr('Double Tap Seek Step'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -674,7 +675,7 @@ class _SeekStepSheet extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${currentStep}s',
+                    context.tr('{value0}s', {'value0': currentStep}),
                     style: TextStyle(
                       color: theme.mutedText,
                       fontSize: 16,
@@ -695,7 +696,7 @@ class _SeekStepSheet extends StatelessWidget {
 
                   return ListTile(
                     title: Text(
-                      '${step}s',
+                      context.tr('{value0}s', {'value0': step}),
                       style: TextStyle(
                         color: isSelected ? theme.strongText : theme.mutedText,
                         fontSize: 16,
@@ -757,7 +758,7 @@ class _SensitivitySheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Drag Sensitivity',
+                    context.tr('Drag Sensitivity'),
                     style: TextStyle(
                       color: theme.strongText,
                       fontSize: 18,
@@ -765,12 +766,12 @@ class _SensitivitySheet extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    options
+                    context.tr(options
                         .firstWhere(
                           (e) => e.value == currentSensitivity,
                           orElse: () => const MapEntry('Medium', 0.3),
                         )
-                        .key,
+                        .key),
                     style: TextStyle(
                       color: theme.mutedText,
                       fontSize: 16,
@@ -791,7 +792,7 @@ class _SensitivitySheet extends StatelessWidget {
 
                   return ListTile(
                     title: Text(
-                      option.key,
+                      context.tr(option.key),
                       style: TextStyle(
                         color: isSelected ? theme.strongText : theme.mutedText,
                         fontSize: 16,

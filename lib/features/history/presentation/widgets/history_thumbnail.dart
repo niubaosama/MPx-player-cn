@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../library/services/thumbnail_cache.dart';
 import '../../../library/services/thumbnail_worker_pool.dart';
@@ -143,7 +144,7 @@ class _HistoryThumbnailState extends State<HistoryThumbnail> {
             ),
             const SizedBox(height: 8),
             Text(
-              widget.entry.video?.resolution ?? '',
+              context.tr(widget.entry.video?.resolution ?? ''),
               style: TextStyle(
                 color: theme.mutedText,
                 fontSize: 12,

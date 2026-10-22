@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # flutter_mpv - Video player with mpv backend
   flutter_mpv: ^1.2.12

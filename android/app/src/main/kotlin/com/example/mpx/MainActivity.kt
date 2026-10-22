@@ -111,6 +111,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
                 val payload = ytDlpModule().callAttr(
                     "install_or_update_yt_dlp_json",
                     installIfAvailable,
+                    AppLanguageResources.languageCode(this),
                 ).toString()
                 mainHandler.post {
                     result.success(parseJsonObject(payload))
@@ -134,7 +135,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
         val list = entries.map { parts ->
             mapOf(
                 "url" to (parts.getOrNull(0) ?: ""),
-                "title" to (parts.getOrNull(1) ?: "Shared Video"),
+                "title" to (parts.getOrNull(1) ?: ""),
                 "savePath" to (parts.getOrNull(2) ?: ""),
                 "success" to (parts.getOrNull(3) == "1"),
                 "error" to (parts.getOrNull(4) ?: ""),
@@ -176,7 +177,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
         val url = call.argument<String>("url")
         val cookiesPath = call.argument<String>("cookiesPath")
         if (url.isNullOrBlank()) {
-            result.error("invalid_args", "URL is required", null)
+            result.error("invalid_args", appString(R.string.url_required), null)
             return
         }
 
@@ -187,6 +188,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
                     "fetch_video_info",
                     url,
                     cookiesPath,
+                    AppLanguageResources.languageCode(this),
                 ).toString()
                 mainHandler.post {
                     result.success(mapOf("json" to json))
@@ -209,7 +211,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
         android.util.Log.w("MPxDownloader", "handleStartDownload: taskId=$taskId, formatSelector=$formatSelector")
 
         if (taskId.isNullOrBlank() || url.isNullOrBlank() || outputPath.isNullOrBlank()) {
-            result.error("invalid_args", "Missing required download arguments", null)
+            result.error("invalid_args", appString(R.string.download_arguments_missing), null)
             return
         }
 
@@ -229,6 +231,7 @@ class MainActivity : PipCallbackHelperActivityWrapper() {
                     cookiesPath,
                     emitter,
                     cancelToken,
+                    AppLanguageResources.languageCode(this),
                 )
             } catch (error: PyException) {
                 if (cancelToken.isCancelled()) {

@@ -18,6 +18,22 @@ MOBILE_USER_AGENT = (
 )
 PYPI_JSON_URL = "https://pypi.org/pypi/yt-dlp/json"
 
+# 只翻译项目生成的提示，第三方原始诊断信息保留原文。
+_ZH_MESSAGES = {
+    "yt-dlp is not available. Install or update the downloader engine and try again.": "yt-dlp 引擎不可用，请安装或更新下载引擎后重试。",
+    "Could not locate a runtime-compatible yt-dlp wheel": "未找到与当前运行环境兼容的 yt-dlp 安装包。",
+    "Instagram blocked anonymous access. Import cookies from a logged-in Instagram session in Downloader Settings and try again.": "Instagram 不允许匿名访问。请在下载设置中导入已登录 Instagram 的 Cookie 后重试。",
+    "Network error while contacting the video site. Check your connection and try again.": "连接视频网站时发生网络错误，请检查网络后重试。",
+    "This shared link is not supported by the current yt-dlp engine yet.": "当前 yt-dlp 引擎暂不支持此分享链接。",
+    "Downloading": "下载中",
+    "Finalizing file": "正在完成文件处理",
+    "Download completed": "下载完成"
+}
+
+
+def _localized_message(message, language):
+    return _ZH_MESSAGES.get(message, message) if language == "zh" else message
+
 
 def _updates_dir():
     return os.path.join(os.environ.get("HOME", os.getcwd()), "yt_dlp_updates")
@@ -62,7 +78,7 @@ def get_yt_dlp_version():
     return yt_dlp.version.__version__
 
 
-def _ensure_yt_dlp_loaded(required=True):
+def _ensure_yt_dlp_loaded(required=True, language="en"):
     global yt_dlp, YoutubeDL
 
     if yt_dlp is not None and YoutubeDL is not None:
@@ -76,7 +92,10 @@ def _ensure_yt_dlp_loaded(required=True):
     except Exception:
         if required:
             raise RuntimeError(
-                "yt-dlp is not available. Install or update the downloader engine and try again."
+                _localized_message(
+                    "yt-dlp is not available. Install or update the downloader engine and try again.",
+                    language,
+                )
             )
         return False
 
@@ -105,10 +124,10 @@ def get_runtime_status_json():
     )
 
 
-def install_or_update_yt_dlp_json(install_if_available=True):
+def install_or_update_yt_dlp_json(install_if_available=True, language="en"):
     available = _ensure_yt_dlp_loaded(required=False)
     current_version = get_yt_dlp_version() if available else None
-    latest_info = _fetch_latest_release_info()
+    latest_info = _fetch_latest_release_info(language)
     latest_version = latest_info["version"]
     update_available = current_version is None or _compare_versions(current_version, latest_version) < 0
 
@@ -149,14 +168,14 @@ def install_or_update_yt_dlp_json(install_if_available=True):
     )
 
 
-def fetch_video_info(url, cookies_path=None):
+def fetch_video_info(url, cookies_path=None, language="en"):
     try:
-        _ensure_yt_dlp_loaded()
+        _ensure_yt_dlp_loaded(language=language)
         with YoutubeDL(_build_options(cookies_path=cookies_path)) as ydl:  # type: ignore[arg-type]
             info = ydl.extract_info(url, download=False)
         return json.dumps(info, default=str)
     except Exception as exc:
-        raise RuntimeError(_friendly_error_message(url, exc)) from exc
+        raise RuntimeError(_friendly_error_message(url, exc, language)) from exc
 
 
 def download_video(
@@ -167,6 +186,7 @@ def download_video(
     cookies_path,
     emitter,
     cancel_token,
+    language="en",
 ):
     def progress_hook(data):
         if _is_cancelled(cancel_token):
@@ -190,8 +210,8 @@ def download_video(
                 "downloading",
                 progress,
                 _format_speed(speed),
-                _format_eta(eta),
-                data.get("_default_template") or "Downloading",
+                _format_eta(eta, language),
+                data.get("_default_template") or _localized_message("Downloading", language),
                 None,
             )
         elif status == "finished":
@@ -200,7 +220,7 @@ def download_video(
                 1.0,
                 None,
                 None,
-                "Finalizing file",
+                _localized_message("Finalizing file", language),
                 data.get("filename"),
             )
 
@@ -216,7 +236,7 @@ def download_video(
     logging.warning(f"[yt-dlp] format_selector = {format_selector}")
     logging.warning(f"[yt-dlp] output_path = {output_path}")
     try:
-        _ensure_yt_dlp_loaded()
+        _ensure_yt_dlp_loaded(language=language)
         with YoutubeDL(options) as ydl:  # type: ignore[arg-type]
             info = ydl.extract_info(url, download=True)
             selected_format = info.get("format") or info.get("format_id") or "unknown"
@@ -224,9 +244,9 @@ def download_video(
             logging.warning(f"[yt-dlp] selected format = {selected_format}, height = {selected_height}")
             final_path = _resolve_final_path(info, ydl, output_path)
     except Exception as exc:
-        raise RuntimeError(_friendly_error_message(url, exc)) from exc
+        raise RuntimeError(_friendly_error_message(url, exc, language)) from exc
 
-    emitter.emit("completed", 1.0, None, None, "Download completed", final_path)
+    emitter.emit("completed", 1.0, None, None, _localized_message("Download completed", language), final_path)
     return final_path
 
 
@@ -246,7 +266,7 @@ def _build_options(cookies_path=None):
     return options
 
 
-def _fetch_latest_release_info():
+def _fetch_latest_release_info(language="en"):
     with urllib.request.urlopen(PYPI_JSON_URL, timeout=15) as response:
         payload = json.loads(response.read().decode("utf-8"))
 
@@ -260,7 +280,7 @@ def _fetch_latest_release_info():
             break
 
     if not wheel_url:
-        raise RuntimeError("Could not locate a runtime-compatible yt-dlp wheel")
+        raise RuntimeError(_localized_message("Could not locate a runtime-compatible yt-dlp wheel", language))
 
     return {"version": version, "wheel_url": wheel_url}
 
@@ -325,7 +345,7 @@ def _compare_versions(left, right):
     return 0
 
 
-def _friendly_error_message(url, exc):
+def _friendly_error_message(url, exc, language="en"):
     message = str(exc)
     lower_message = message.lower()
     lower_url = url.lower()
@@ -336,16 +356,17 @@ def _friendly_error_message(url, exc):
         or "private" in lower_message
         or "restricted" in lower_message
     ):
-        return (
+        return _localized_message(
             "Instagram blocked anonymous access. Import cookies from a logged-in "
-            "Instagram session in Downloader Settings and try again."
+            "Instagram session in Downloader Settings and try again.",
+            language,
         )
 
     if isinstance(exc, URLError):
-        return "Network error while contacting the video site. Check your connection and try again."
+        return _localized_message("Network error while contacting the video site. Check your connection and try again.", language)
 
     if "unsupported url" in lower_message:
-        return "This shared link is not supported by the current yt-dlp engine yet."
+        return _localized_message("This shared link is not supported by the current yt-dlp engine yet.", language)
 
     return message
 
@@ -379,12 +400,18 @@ def _format_speed(value):
     return f"{speed:.1f} {units[unit_index]}"
 
 
-def _format_eta(value):
+def _format_eta(value, language="en"):
     if value in (None, ""):
         return None
     seconds = int(math.ceil(float(value)))
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
+    if language == "zh":
+        if hours > 0:
+            return f"{hours} 小时 {minutes} 分钟"
+        if minutes > 0:
+            return f"{minutes} 分 {seconds} 秒"
+        return f"{seconds} 秒"
     if hours > 0:
         return f"{hours}h {minutes}m"
     if minutes > 0:

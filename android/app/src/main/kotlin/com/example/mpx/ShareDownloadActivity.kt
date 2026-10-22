@@ -21,13 +21,17 @@ import androidx.core.content.ContextCompat
 
 class ShareDownloadActivity : ComponentActivity() {
 
-    private val qualityLabels = arrayOf("Auto", "1080p", "720p", "480p", "Audio only")
-    private val qualityValues = mapOf(
-        "Auto" to "best[ext=mp4]/best",
-        "1080p" to "best[height<=1080][ext=mp4]/best[height<=1080]/best",
-        "720p" to "best[height<=720][ext=mp4]/best[height<=720]/best",
-        "480p" to "best[height<=480][ext=mp4]/best[height<=480]/best",
-        "Audio only" to "bestaudio[ext=m4a]/bestaudio/best",
+    private val qualityLabels get() = arrayOf(
+        appString(R.string.quality_auto), "1080p", "720p", "480p",
+        appString(R.string.quality_audio_only),
+    )
+    // 画质标签随语言变化，下载参数始终通过稳定索引关联。
+    private val qualityValues = arrayOf(
+        "best[ext=mp4]/best",
+        "best[height<=1080][ext=mp4]/best[height<=1080]/best",
+        "best[height<=720][ext=mp4]/best[height<=720]/best",
+        "best[height<=480][ext=mp4]/best[height<=480]/best",
+        "bestaudio[ext=m4a]/bestaudio/best",
     )
     private val qualityIcons = arrayOf("⚡", "🎬", "📺", "📱", "🎵")
 
@@ -40,9 +44,13 @@ class ShareDownloadActivity : ComponentActivity() {
         if (granted) {
             startDownload()
         } else {
-            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, appString(R.string.permission_denied), Toast.LENGTH_SHORT).show()
             startDownload()
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguageResources.contextFor(newBase))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +98,7 @@ class ShareDownloadActivity : ComponentActivity() {
 
         // Title
         val titleText = TextView(this).apply {
-            text = "Download to MPx"
+            text = appString(R.string.share_download_title)
             textSize = 20f
             setTextColor(onSurfaceColor)
             typeface = Typeface.DEFAULT_BOLD
@@ -101,7 +109,7 @@ class ShareDownloadActivity : ComponentActivity() {
 
         // Subtitle
         val subtitleText = TextView(this).apply {
-            text = "Choose quality and start downloading"
+            text = appString(R.string.share_download_subtitle)
             textSize = 14f
             setTextColor(mutedColor)
             gravity = Gravity.CENTER
@@ -143,7 +151,7 @@ class ShareDownloadActivity : ComponentActivity() {
 
         // Quality label
         val qualityLabel = TextView(this).apply {
-            text = "Download Quality"
+            text = appString(R.string.download_quality)
             textSize = 13f
             setTextColor(primaryColor)
             typeface = Typeface.DEFAULT_BOLD
@@ -223,7 +231,7 @@ class ShareDownloadActivity : ComponentActivity() {
             setPadding(0, 0, (8 * resources.displayMetrics.density).toInt(), 0)
         }
         val infoText = TextView(this).apply {
-            text = "Downloads run in background with progress notification"
+            text = appString(R.string.share_background_info)
             textSize = 12f
             setTextColor(mutedColor)
         }
@@ -240,7 +248,7 @@ class ShareDownloadActivity : ComponentActivity() {
 
         // Cancel button
         val cancelButton = Button(this).apply {
-            text = "Cancel"
+            text = appString(R.string.cancel)
             setTextColor(mutedColor)
             textSize = 15f
             background = GradientDrawable().apply {
@@ -259,7 +267,7 @@ class ShareDownloadActivity : ComponentActivity() {
 
         // Download button
         val downloadButton = Button(this).apply {
-            text = "Download"
+            text = appString(R.string.download)
             setTextColor(Color.WHITE)
             textSize = 15f
             typeface = Typeface.DEFAULT_BOLD
@@ -314,13 +322,12 @@ class ShareDownloadActivity : ComponentActivity() {
             finish()
             return
         }
-        val label = qualityLabels[selectedIndex]
-        val formatSelector = qualityValues[label] ?: qualityValues.getValue("Auto")
+        val formatSelector = qualityValues[selectedIndex]
 
         val serviceIntent = ShareDownloadService.createIntent(this, url, formatSelector)
         ContextCompat.startForegroundService(this, serviceIntent)
 
-        Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, appString(R.string.download_started), Toast.LENGTH_SHORT).show()
         finish()
     }
 

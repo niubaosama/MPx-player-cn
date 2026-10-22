@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 
 class SeekFeedbackIndicator extends StatelessWidget {
   final bool isForward;
@@ -43,7 +44,7 @@ class SeekFeedbackIndicator extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '${forwardedTime}s',
+            context.tr('{value0}s', {'value0': forwardedTime}),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 14,

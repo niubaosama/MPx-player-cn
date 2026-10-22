@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class FavoritesEmptyState extends StatelessWidget {
@@ -16,20 +17,20 @@ class FavoritesEmptyState extends StatelessWidget {
           children: [
             Icon(Icons.favorite_border, size: 80, color: theme.faintText),
             const SizedBox(height: 20),
-            Text('No favorite videos',
+            Text(context.tr('No favorite videos'),
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: theme.strongText)),
             const SizedBox(height: 8),
-            Text('Long press a video to add it to favorites',
+            Text(context.tr('Long press a video to add it to favorites'),
                 style: TextStyle(fontSize: 14, color: theme.mutedText)),
             if (onTryDemo != null) ...[
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: onTryDemo,
                 icon: const Icon(Icons.play_circle_outline),
-                label: const Text('Try Demo Mode'),
+                label: Text(context.tr('Try Demo Mode')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
                   foregroundColor: Colors.white,

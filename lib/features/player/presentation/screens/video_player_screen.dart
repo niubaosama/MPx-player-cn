@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:simple_pip_mode/actions/pip_action.dart';
@@ -351,7 +352,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
   void _playPrevious(BuildContext context) async {
     if (_currentIndex <= 0) {
-      _showOverlayMessage('No previous video');
+      _showOverlayMessage(context.tr('No previous video'));
       return;
     }
     final controller = context.read<PlayerController>();
@@ -374,7 +375,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
   void _playNext(BuildContext context) async {
     if (_currentIndex >= _playlist.length - 1) {
-      _showOverlayMessage('No next video');
+      _showOverlayMessage(context.tr('No next video'));
       return;
     }
     final controller = context.read<PlayerController>();

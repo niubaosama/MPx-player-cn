@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
 class PathBreadcrumb extends StatelessWidget {
@@ -11,7 +12,7 @@ class PathBreadcrumb extends StatelessWidget {
     required this.onPathTap,
   });
 
-  List<_PathSegment> get _segments {
+  List<_PathSegment> _segments(BuildContext context) {
     if (currentPath.isEmpty) return [];
 
     final parts = currentPath.split('/').where((p) => p.isNotEmpty).toList();
@@ -20,7 +21,7 @@ class PathBreadcrumb extends StatelessWidget {
     String buildPath = '';
     if (currentPath.startsWith('/storage')) {
       buildPath = '/storage/emulated/0';
-      segments.add(_PathSegment('Internal Storage', buildPath));
+      segments.add(_PathSegment(context.tr('Internal Storage'), buildPath));
       buildPath += '/';
     }
 
@@ -41,7 +42,7 @@ class PathBreadcrumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = theme.colorScheme.primary;
-    final segments = _segments;
+    final segments = _segments(context);
 
     if (segments.isEmpty) {
       return const SizedBox.shrink();

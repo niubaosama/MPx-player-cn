@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../controller/player_controller.dart';
 import 'top_bar.dart';
 import 'bottom_controls.dart';
@@ -159,8 +160,8 @@ class ControlsLayer extends StatelessWidget {
                     onTogglePlayPause: controller.togglePlayPause,
                     onToggleFullscreen: controller.toggleFullscreen,
                     onCycleAspectRatio: controller.cycleAspectRatio,
-                    aspectRatioLabel: controller
-                        .getAspectRatioLabel(controller.aspectRatioMode),
+                    aspectRatioLabel: context.tr(controller
+                        .getAspectRatioLabel(controller.aspectRatioMode)),
                     onTogglePip: onTogglePip,
                     showPipButton: showPipButton,
                     onNext: onNext != null

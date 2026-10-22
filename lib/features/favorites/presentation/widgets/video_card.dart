@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../library/domain/entities/video_file.dart';
 import 'video_thumbnail.dart';
@@ -59,9 +60,9 @@ class VideoCard extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Text(
-                          'Favorite',
-                          style: TextStyle(
+                        child: Text(
+                          context.tr('Favorite'),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 import '../../domain/enums/quality_preference.dart';
@@ -52,7 +53,7 @@ class QualitySelectorDropdown extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Download Quality',
+                    context.tr('Download Quality'),
                     style: TextStyle(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -60,7 +61,7 @@ class QualitySelectorDropdown extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${value.label} — ${_getQualityDescription(value)}',
+                    '${context.tr(value.label)} — ${_getQualityDescription(context, value)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -106,7 +107,7 @@ class QualitySelectorDropdown extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Select Quality',
+                  context.tr('Select Quality'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -123,7 +124,7 @@ class QualitySelectorDropdown extends StatelessWidget {
                         : theme.mutedText,
                   ),
                   title: Text(
-                    quality.label,
+                    context.tr(quality.label),
                     style: TextStyle(
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -133,7 +134,7 @@ class QualitySelectorDropdown extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    _getQualityDescription(quality),
+                    _getQualityDescription(context, quality),
                     style: TextStyle(color: theme.faintText),
                   ),
                   trailing: isSelected
@@ -169,18 +170,18 @@ class QualitySelectorDropdown extends StatelessWidget {
     }
   }
 
-  String _getQualityDescription(QualityPreference quality) {
+  String _getQualityDescription(BuildContext context, QualityPreference quality) {
     switch (quality) {
       case QualityPreference.auto:
-        return 'Best available quality';
+        return context.tr('Best available quality');
       case QualityPreference.p1080:
-        return 'Full HD video';
+        return context.tr('Full HD video');
       case QualityPreference.p720:
-        return 'HD video';
+        return context.tr('HD video');
       case QualityPreference.p480:
-        return 'Standard quality';
+        return context.tr('Standard quality');
       case QualityPreference.audioOnly:
-        return 'Audio track only';
+        return context.tr('Audio track only');
     }
   }
 }

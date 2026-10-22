@@ -341,7 +341,7 @@ class _MainScreenState extends State<MainScreen>
               return NavigationDestination(
                 icon: Icon(_outlineIcons[index]),
                 selectedIcon: Icon(_selectedIcons[index]),
-                label: _labels[index],
+                label: context.tr(_labels[index]),
               );
             }),
           ),

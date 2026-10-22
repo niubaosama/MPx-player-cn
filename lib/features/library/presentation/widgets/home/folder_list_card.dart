@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/features/library/domain/entities/video_folder.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 
@@ -79,7 +80,7 @@ class FolderListCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Folder ready to browse',
+                        context.tr('Folder ready to browse'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -94,7 +95,7 @@ class FolderListCard extends StatelessWidget {
                         runSpacing: 8,
                         children: [
                           _MetaPill(
-                              label: '${folder.videoCount} videos',
+                              label: context.tr('{value0} videos', {'value0': folder.videoCount}),
                               tint: accent),
                           _MetaPill(
                             label: folder.formattedSize,

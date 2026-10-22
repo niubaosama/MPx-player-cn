@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 class EmptyReelsView extends StatelessWidget {
@@ -30,13 +31,13 @@ class EmptyReelsView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No Reels yet!',
+              context.tr('No Reels yet!'),
               style: theme.textTheme.headlineSmall
                   ?.copyWith(color: theme.strongText),
             ),
             const SizedBox(height: 8),
             Text(
-              'Navigate to a folder in Home and tap the import button, or add videos via the video details sheet.',
+              context.tr('Navigate to a folder in Home and tap the import button, or add videos via the video details sheet.'),
               textAlign: TextAlign.center,
               style:
                   theme.textTheme.bodyMedium?.copyWith(color: theme.mutedText),
@@ -65,7 +66,7 @@ class EmptyReelsView extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Or add/delete your own videos externally at:',
+            context.tr('Or add/delete your own videos externally at:'),
             style: TextStyle(
                 color: theme.strongText,
                 fontWeight: FontWeight.w600,
@@ -91,7 +92,7 @@ class EmptyReelsView extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onImportFolder,
       icon: const Icon(Icons.folder_open_rounded),
-      label: const Text('Import Current Folder'),
+      label: Text(context.tr('Import Current Folder')),
       style: ElevatedButton.styleFrom(
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,

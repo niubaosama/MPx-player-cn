@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../domain/entities/watch_history_entry.dart';
 import 'history_thumbnail.dart';
@@ -50,7 +51,7 @@ class HistoryListItem extends StatelessWidget {
                     if (entry.isInProgress) _buildProgressBar(),
                     if (onRemove != null) _buildRemoveButton(),
                     if (entry.isInProgress && !entry.isCompleted)
-                      _buildResumeBadge(),
+                      _buildResumeBadge(context),
                   ],
                 ),
                 HistoryInfo(entry: entry),
@@ -116,7 +117,7 @@ class HistoryListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildResumeBadge() {
+  Widget _buildResumeBadge(BuildContext context) {
     return Positioned(
       top: 8,
       left: 8,
@@ -126,14 +127,14 @@ class HistoryListItem extends StatelessWidget {
           color: const Color(0xFF7C3AED),
           borderRadius: BorderRadius.circular(999),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.play_arrow, color: Colors.white, size: 14),
-            SizedBox(width: 2),
+            const Icon(Icons.play_arrow, color: Colors.white, size: 14),
+            const SizedBox(width: 2),
             Text(
-              'Resume',
-              style: TextStyle(
+              context.tr('Resume'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,

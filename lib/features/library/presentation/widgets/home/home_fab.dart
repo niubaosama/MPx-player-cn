@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../services/thumbnail_worker_pool.dart';
 import '../../../services/thumbnail_cache.dart';
@@ -225,7 +226,7 @@ class HomeFABState extends State<HomeFAB> with RouteAware {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Continue watching',
+                                        context.tr('Continue watching'),
                                         style: TextStyle(
                                           color: theme.mutedText,
                                           fontSize: 10,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/features/settings/presentation/helpers/subtitle_font_helpers.dart';
 import '../../../controller/player_controller.dart';
 
@@ -20,7 +21,7 @@ class SubtitlePreview extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'This is a subtitle preview',
+        context.tr('This is a subtitle preview'),
         style: SubtitleFontHelpers.textStyle(
           controller.subtitleFontFamily,
           color: controller.subtitleColor,

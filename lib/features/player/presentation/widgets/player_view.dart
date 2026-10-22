@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../controller/player_controller.dart';
 import 'player_surface.dart';
@@ -35,7 +36,7 @@ class PlayerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Video player for $videoTitle',
+      label: context.tr('Video player for {value0}', {'value0': videoTitle}),
       child: Stack(
         fit: StackFit.expand,
         children: [

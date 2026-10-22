@@ -48,8 +48,9 @@ class DownloaderRepositoryImpl implements DownloaderRepository {
   }) async {
     final taskId = _uuid.v4();
     final videoInfo = await _remoteDataSource.fetchVideoInfo(url);
-    final title =
+    final candidate =
         customTitle?.isNotEmpty == true ? customTitle : videoInfo?.title;
+    final title = candidate?.trim().isNotEmpty == true ? candidate : null;
     final outputPath = await _buildOutputPath(
       taskId,
       title,
@@ -63,7 +64,7 @@ class DownloaderRepositoryImpl implements DownloaderRepository {
       id: taskId,
       videoId: videoInfo?.id,
       url: url,
-      title: title ?? 'Pending download',
+      title: title ?? '',
       savePath: outputPath,
       formatSelector: formatSelector,
       status: DownloadStatus.queued,
@@ -159,7 +160,7 @@ class DownloaderRepositoryImpl implements DownloaderRepository {
     int count = 0;
     for (final entry in entries) {
       final url = entry['url'] as String? ?? '';
-      final title = entry['title'] as String? ?? 'Shared Video';
+      final title = entry['title'] as String? ?? '';
       final savePath = entry['savePath'] as String? ?? '';
       final success = entry['success'] as bool? ?? false;
       final error = entry['error'] as String?;

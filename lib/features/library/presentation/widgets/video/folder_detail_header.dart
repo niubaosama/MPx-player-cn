@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../services/video_metadata_service.dart';
 import '../../../domain/entities/video_folder.dart';
 
@@ -17,7 +18,7 @@ class FolderDetailHeader extends StatefulWidget {
 }
 
 class _FolderDetailHeaderState extends State<FolderDetailHeader> {
-  String _durationText = '';
+  int _durationMs = 0;
   bool _isLoadingDuration = true;
 
   @override
@@ -34,7 +35,7 @@ class _FolderDetailHeaderState extends State<FolderDetailHeader> {
     if (videosWithZeroDuration.isEmpty) {
       // All videos have duration
       setState(() {
-        _durationText = widget.folder.formattedDuration;
+        _durationMs = widget.folder.videos.fold(0, (sum, video) => sum + video.duration);
         _isLoadingDuration = false;
       });
       return;
@@ -62,25 +63,25 @@ class _FolderDetailHeaderState extends State<FolderDetailHeader> {
 
     if (mounted) {
       setState(() {
-        _durationText = _formatDuration(totalDuration);
+        _durationMs = totalDuration;
         _isLoadingDuration = false;
       });
     }
   }
 
   String _formatDuration(int durationMs) {
-    if (durationMs == 0) return '0s';
+    if (durationMs == 0) return context.tr('{value0}s', {'value0': 0});
 
     final hours = durationMs ~/ 3600000;
     final minutes = (durationMs % 3600000) ~/ 60000;
     final seconds = (durationMs % 60000) ~/ 1000;
 
     if (hours > 0) {
-      return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+      return context.tr('{value0}h {value1}m', {'value0': hours, 'value1': minutes.toString().padLeft(2, '0')});
     } else if (minutes > 0) {
-      return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
+      return context.tr('{value0}m {value1}s', {'value0': minutes, 'value1': seconds.toString().padLeft(2, '0')});
     } else {
-      return '${seconds}s';
+      return context.tr('{value0}s', {'value0': seconds});
     }
   }
 
@@ -110,7 +111,7 @@ class _FolderDetailHeaderState extends State<FolderDetailHeader> {
                 Row(
                   children: [
                     Text(
-                      '${widget.folder.videoCount} videos • ${widget.folder.formattedSize}',
+                      context.tr('{value0} videos • {value1}', {'value0': widget.folder.videoCount, 'value1': widget.folder.formattedSize}),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -130,7 +131,7 @@ class _FolderDetailHeaderState extends State<FolderDetailHeader> {
                       )
                     else
                       Text(
-                        ' • $_durationText',
+                        ' • ${_formatDuration(_durationMs)}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,

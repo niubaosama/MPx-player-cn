@@ -1,3 +1,4 @@
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../reels/controllers/reels_controller.dart';
 import 'package:flutter/material.dart';
@@ -21,42 +22,42 @@ class LibraryItemDetailsSheet {
       backgroundColor: Colors.transparent,
       builder: (context) => _DetailsSheet(
         title: item.name,
-        subtitle: item.isDirectory ? 'Folder' : 'Video',
+        subtitle: item.isDirectory ? context.tr('Folder') : context.tr('Video'),
         accentColor: item.isDirectory
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.secondary,
         icon: item.isDirectory ? Icons.folder_rounded : Icons.movie_rounded,
         primaryMeta: item.isDirectory
-            ? LibraryItemUi.folderVideoLabel(item.videoCount)
+            ? LibraryItemUi.folderVideoLabel(context, item.videoCount)
             : item.formattedSize,
-        secondaryMeta: _formatDateTime(item.modified),
+        secondaryMeta: _formatDateTime(context, item.modified),
         action: !item.isDirectory && onToggleFavorite != null
             ? _SheetAction(
-                label: isFavorite ? 'Remove favorite' : 'Add favorite',
+                label: isFavorite ? context.tr('Remove favorite') : context.tr('Add favorite'),
                 icon: isFavorite ? Icons.favorite : Icons.favorite_border,
                 onTap: onToggleFavorite,
               )
             : null,
         facts: [
           _SheetFact(
-            label: 'Location',
+            label: context.tr('Location'),
             value: LibraryItemUi.parentFolderName(item.path),
           ),
           _SheetFact(
-            label: item.isDirectory ? 'Contains' : 'Format',
+            label: item.isDirectory ? context.tr('Contains') : context.tr('Format'),
             value: item.isDirectory
-                ? _folderContainsLabel(item.videoCount)
+                ? _folderContainsLabel(context, item.videoCount)
                 : item.extension.toUpperCase(),
           ),
-          _SheetFact(label: 'Updated', value: _formatDateTime(item.modified)),
-          _SheetFact(label: 'Path', value: item.path),
+          _SheetFact(label: context.tr('Updated'), value: _formatDateTime(context, item.modified)),
+          _SheetFact(label: context.tr('Path'), value: item.path),
         ],
         extraContent: item.isDirectory
             ? null
             : _VideoRuntimeMetadata(
                 path: item.path,
                 fallbackDuration: '00:00',
-                fallbackResolution: 'Unknown',
+                fallbackResolution: context.tr('Unknown'),
               ),
         onAddToReels: !item.isDirectory
             ? () async {
@@ -66,8 +67,8 @@ class LibraryItemDetailsSheet {
                   await reelsController.importVideoToReels(item.path);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Video added to Reels'),
+                      SnackBar(
+                          content: Text(context.tr('Video added to Reels')),
                           backgroundColor: Colors.green),
                     );
                   }
@@ -75,7 +76,7 @@ class LibraryItemDetailsSheet {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text('Failed to add to Reels: $e'),
+                          content: Text(context.tr('Failed to add to Reels: {value0}', {'value0': e})),
                           backgroundColor: Colors.red),
                     );
                   }
@@ -102,17 +103,17 @@ class LibraryItemDetailsSheet {
         accentColor: Theme.of(context).colorScheme.secondary,
         icon: Icons.play_circle_fill_rounded,
         primaryMeta: video.formattedSize,
-        secondaryMeta: video.formattedDate,
+        secondaryMeta: context.l10n.relativeDate(video.dateAdded),
         action: _SheetAction(
-          label: isFavorite ? 'Remove favorite' : 'Add favorite',
+          label: isFavorite ? context.tr('Remove favorite') : context.tr('Add favorite'),
           icon: isFavorite ? Icons.favorite : Icons.favorite_border,
           onTap: onToggleFavorite,
         ),
         facts: [
-          _SheetFact(label: 'Folder', value: video.folderName),
-          _SheetFact(label: 'Quality', value: video.resolution),
-          _SheetFact(label: 'Added', value: _formatDateTime(video.dateAdded)),
-          _SheetFact(label: 'Path', value: video.path),
+          _SheetFact(label: context.tr('Folder'), value: video.folderName),
+          _SheetFact(label: context.tr('Quality'), value: context.tr(video.resolution)),
+          _SheetFact(label: context.tr('Added'), value: _formatDateTime(context, video.dateAdded)),
+          _SheetFact(label: context.tr('Path'), value: video.path),
         ],
         extraContent: _VideoRuntimeMetadata(
           path: video.path,
@@ -126,8 +127,8 @@ class LibraryItemDetailsSheet {
             await reelsController.importVideoToReels(video.path);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Video added to Reels'),
+                SnackBar(
+                    content: Text(context.tr('Video added to Reels')),
                     backgroundColor: Colors.green),
               );
             }
@@ -135,7 +136,7 @@ class LibraryItemDetailsSheet {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text('Failed to add to Reels: $e'),
+                    content: Text(context.tr('Failed to add to Reels: {value0}', {'value0': e})),
                     backgroundColor: Colors.red),
               );
             }
@@ -145,32 +146,16 @@ class LibraryItemDetailsSheet {
     );
   }
 
-  static String _folderContainsLabel(int? count) {
-    return LibraryItemUi.folderVideoLabel(count);
+  static String _folderContainsLabel(BuildContext context, int? count) {
+    return LibraryItemUi.folderVideoLabel(context, count);
   }
 
-  static String _formatDateTime(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
+  static String _formatDateTime(BuildContext context, DateTime date) {
     final local = date.toLocal();
-    final month = months[local.month - 1];
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$day $month ${local.year} • $hour:$minute';
+    final material = MaterialLocalizations.of(context);
+    final day = material.formatMediumDate(local);
+    final time = material.formatTimeOfDay(TimeOfDay.fromDateTime(local), alwaysUse24HourFormat: true);
+    return '$day • $time';
   }
 }
 
@@ -297,7 +282,7 @@ class _DetailsSheet extends StatelessWidget {
               ],
               const SizedBox(height: 18),
               Text(
-                'Details',
+                context.tr('Details'),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -347,7 +332,7 @@ class _DetailsSheet extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.video_collection_rounded, size: 18),
-                    label: const Text('Add to Reels'),
+                    label: Text(context.tr('Add to Reels')),
                   ),
                 ),
               ],
@@ -416,15 +401,15 @@ class _VideoRuntimeMetadataState extends State<_VideoRuntimeMetadata> {
       children: [
         Expanded(
           child: _InfoTile(
-            label: 'Resolution',
-            value: _isLoading ? 'Loading...' : (_resolution ?? 'Unknown'),
+            label: context.tr('Resolution'),
+            value: _isLoading ? context.tr('Loading...') : context.tr(_resolution ?? 'Unknown'),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _InfoTile(
-            label: 'Duration',
-            value: _isLoading ? 'Loading...' : (_duration ?? '00:00'),
+            label: context.tr('Duration'),
+            value: _isLoading ? context.tr('Loading...') : (_duration ?? '00:00'),
           ),
         ),
       ],
