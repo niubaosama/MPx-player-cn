@@ -1,5 +1,7 @@
 // 简体中文资源。英文键保持稳定，动态值通过占位符传入。
 const Map<String, String> zhMessages = {
+  'Save': '保存',
+  'Refresh': '刷新',
   "Saved": "已保存",
   "Unable to save settings": "无法保存设置",
   "Startup screen": "启动界面",

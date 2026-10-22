@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mpx/features/reels/controllers/reels_controller.dart';
@@ -8,12 +9,16 @@ VideoFile video(String name, int date) => VideoFile(id: name, path: '/videos/$na
   title: name, folderPath: '/videos', folderName: 'videos', size: 100, duration: 600000,
   dateAdded: DateTime(2026, 1, date));
 class SessionService extends Fake implements ReelService {
+  Completer<void>? pendingRefresh;
   List<VideoFile> folders = [video('a', 1), video('b', 2), video('c', 3)];
   List<VideoFile> local = [video('x', 4), video('y', 5), video('z', 6)];
   @override
   Future<List<ReelSource>> getSources() async => [];
   @override
-  Future<List<VideoFile>> getReelsVideos({bool forceRefresh = false}) async => List.of(folders);
+  Future<List<VideoFile>> getReelsVideos({bool forceRefresh = false}) async {
+    if (forceRefresh && pendingRefresh != null) await pendingRefresh!.future;
+    return List.of(folders);
+  }
   @override
   Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async => List.of(local);
 }
@@ -84,6 +89,22 @@ void main() {
     expect(controller.currentVideo, isNotNull);
     controller.dispose();
   });
+  test('refresh completion does not jump back when user advances during scanning', () async {
+    final service = SessionService();
+    final controller = ReelsController(service: service);
+    await controller.initialized;
+    service.pendingRefresh = Completer<void>();
+    final refreshing = controller.loadReels(forceRefresh: true);
+    controller.selectIndex(2);
+    final path = controller.currentVideo!.path;
+    controller.rememberPosition(path, const Duration(seconds: 45));
+    service.pendingRefresh!.complete();
+    await refreshing;
+    expect(controller.currentVideo!.path, path);
+    expect(controller.positionFor(path), const Duration(seconds: 45));
+    controller.dispose();
+  });
+
   test('source mode restores from preferences', () async {
     SharedPreferences.setMockInitialValues({'reels_source_mode': 'localRandom'});
     final controller = ReelsController(service: SessionService());

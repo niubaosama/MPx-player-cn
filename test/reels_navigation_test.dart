@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:mpx/features/library/domain/entities/video_file.dart';
 import 'package:mpx/features/reels/controllers/reels_controller.dart';
 import 'package:mpx/features/reels/presentation/screens/reels_screen.dart';
@@ -31,11 +32,11 @@ void main() {
     final navigator = GlobalKey<NavigatorState>();
     var livePlayers = 0;
     var peakPlayers = 0;
-    await tester.pumpWidget(MaterialApp(navigatorKey: navigator,
+    await tester.pumpWidget(MaterialApp(navigatorKey: navigator, localizationsDelegates: const [AppLocalizations.delegate],
       home: ChangeNotifierProvider.value(value: controller, child: ValueListenableBuilder<bool>(
         valueListenable: active, builder: (_, value, __) => ReelsScreen(isActive: value,
           playerBuilder: (_, video, session) => Probe(key: ValueKey(video.path), path: video.path,
-            onChange: (delta) { livePlayers += delta; if (livePlayers > peakPlayers) peakPlayers = livePlayers; }))))));
+            onChange: (delta) { livePlayers += delta; if (livePlayers > peakPlayers) { peakPlayers = livePlayers; } }))))));
     await tester.pumpAndSettle();
     expect(livePlayers, 1);
     expect(find.text(videos[1].path), findsOneWidget);

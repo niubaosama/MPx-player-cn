@@ -89,7 +89,7 @@ class ReelService {
 
   Future<void> importFolder(String path, {bool includeSubfolders = true}) async {
     path = p.normalize(p.absolute(path));
-    if (!await Directory(path).exists()) throw FileSystemException('Folder not found', path);
+    if (!await Directory(path).exists()) { throw FileSystemException('Folder not found', path); }
     // 校验访问权限，不复制文件，也不创建目标目录。
     await Directory(path).list(followLinks: false).take(1).drain<void>();
     final source = ReelSource(path: path, includeSubfolders: includeSubfolders);
@@ -102,8 +102,8 @@ class ReelService {
 
   Future<void> importVideoFile(String path) async {
     path = p.normalize(p.absolute(path));
-    if (!await File(path).exists()) throw FileSystemException('Video not found', path);
-    if (!FileItem.isVideoFileName(p.basename(path))) throw ArgumentError('Not a video file');
+    if (!await File(path).exists()) { throw FileSystemException('Video not found', path); }
+    if (!FileItem.isVideoFileName(p.basename(path))) { throw ArgumentError('Not a video file'); }
     final source = ReelSource(path: path, isFolder: false);
     await _change((sources) => [
       ...sources.where((item) => item.path != source.path), source,

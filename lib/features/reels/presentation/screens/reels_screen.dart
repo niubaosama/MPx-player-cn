@@ -73,7 +73,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
       initialPosition: playback.position, initialPlaybackSpeed: playback.speed,
       initiallyPaused: playback.paused, returnPlaybackState: !widget.standalone,
       onPlaybackChanged: widget.standalone ? widget.onPlaybackChanged : (result) {
-        if (mounted) controller.selectVideo(result.video.path, result.position, result.speed, result.paused);
+        if (mounted) { controller.selectVideo(result.video.path, result.position, result.speed, result.paused); }
       }));
     if (widget.standalone) {
       widget.onPlaybackChanged?.call(playback);
@@ -87,7 +87,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
   }
   void _leave(ReelsController controller) {
     final playback = _transfer(controller);
-    if (playback != null) widget.onPlaybackChanged?.call(playback);
+    if (playback != null) { widget.onPlaybackChanged?.call(playback); }
     Navigator.of(context).pop(playback);
   }
 
@@ -120,7 +120,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
             final video = controller.reelsVideos[index];
             if (!_active || index != controller.currentIndex) { return const SizedBox.expand(); }
             final playerBuilder = widget.playerBuilder;
-            if (playerBuilder != null) return playerBuilder(context, video, controller);
+            if (playerBuilder != null) { return playerBuilder(context, video, controller); }
             return ReelPlayerItem(key: ValueKey(video.path), video: video,
               initialPosition: controller.positionFor(video.path),
               playbackSpeed: controller.playbackSpeed, isPaused: controller.isPaused,

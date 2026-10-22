@@ -107,7 +107,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         final controller = PlayerController(repository);
         _controller = controller;
         controller.trackPlaybackSubscription(repository.player.stream.error.listen((error) {
-          if (mounted && error.isNotEmpty) setState(() => _loadError = error);
+          if (mounted && error.isNotEmpty) { setState(() => _loadError = error); }
         }));
         _loadInitial(controller);
         controller.startHideTimer();

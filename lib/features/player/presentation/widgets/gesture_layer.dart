@@ -62,14 +62,16 @@ class GestureLayer extends StatelessWidget {
           flex: 2,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTapDown: (_) => controller.handleCenterTap(),
+            onTap: controller.handleCenterTap,
             onHorizontalDragStart: (details) =>
                 controller.onHorizontalDragStart(details.globalPosition.dx),
             onHorizontalDragUpdate: (details) => controller
                 .onHorizontalDragUpdate(details.globalPosition.dx, screenWidth),
             onHorizontalDragEnd: (_) => controller.onHorizontalDragEnd(),
+            onHorizontalDragCancel: controller.cancelHorizontalDrag,
             onLongPressStart: (_) => controller.onLongPressStart(),
             onLongPressEnd: (_) => controller.onLongPressEnd(),
+            onLongPressCancel: controller.onLongPressEnd,
             child: Container(color: Colors.transparent),
           ),
         ),

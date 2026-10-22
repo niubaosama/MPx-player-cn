@@ -227,7 +227,7 @@ class AppSettingsService {
       _prefs.setString('splash_title', title),
       _prefs.setString('splash_subtitle', subtitle),
     ]);
-    if (results.any((saved) => !saved)) throw StateError('Unable to save startup settings');
+    if (results.any((saved) => !saved)) { throw StateError('Unable to save startup settings'); }
   }
 
   static late SharedPreferences _prefs;

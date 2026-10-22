@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +31,7 @@ class ReelsController extends ChangeNotifier {
   final Map<ReelsSourceMode, String?> _modeCurrentPaths = {};
   final Map<ReelsSourceMode, ReelsSortOrder> _modeSortOrders = {};
 
-  List<VideoFile> get reelsVideos => List.unmodifiable(_reelsVideos);
+  List<VideoFile> get reelsVideos => UnmodifiableListView(_reelsVideos);
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<ReelSource> get sources => List.unmodifiable(_sources);
@@ -80,7 +81,6 @@ class ReelsController extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     _notify();
-    final currentPath = currentVideo?.path;
     try {
       _sources = await _service.getSources();
       final found = targetFolderPath != null
@@ -89,13 +89,14 @@ class ReelsController extends ChangeNotifier {
             ? await _service.getLocalVideos(forceRefresh: forceRefresh)
             : await _service.getReelsVideos(forceRefresh: forceRefresh);
       if (_disposed) { return; }
+      final currentPath = currentVideo?.path;
       final byPath = {for (final video in found) video.path: video};
       // 刷新只合并新增和移除，不打乱正在观看的会话。
       final previous = _reelsVideos.where((video) => byPath.containsKey(video.path)).toList();
       final previousPaths = previous.map((video) => video.path).toSet();
       final added = found.where((video) => !previousPaths.contains(video.path)).toList();
       _reelsVideos = [...previous.map((video) => byPath[video.path]!), ...added];
-      if (previous.isEmpty) { _applySort(); }
+      if (previous.isEmpty || _sortOrder != ReelsSortOrder.shuffle) { _applySort(); }
       _selectPath(currentPath);
       _queueRevision++;
     } catch (e) {

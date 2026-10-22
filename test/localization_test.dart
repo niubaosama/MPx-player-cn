@@ -22,6 +22,8 @@ void main() {
     const zh = AppLocalizations(Locale('zh'));
     const en = AppLocalizations(Locale('en'));
     expect(zh.text('Settings'), '设置');
+    expect(zh.text('Save'), '保存');
+    expect(zh.text('Refresh'), '刷新');
     expect(en.text('Settings'), 'Settings');
     expect(zh.text('Track {value0}', {'value0': 2}), '音轨 2');
     // 用户文件名中的占位符字符应原样保留，不能再次被替换。

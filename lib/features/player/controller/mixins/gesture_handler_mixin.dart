@@ -110,6 +110,17 @@ mixin GestureHandlerMixin on ChangeNotifier {
     startHideTimer();
   }
 
+  void cancelHorizontalDrag() {
+    if (!state.isDraggingX) return;
+    state.position = state.seekStartPosition;
+    state.isDraggingX = false;
+    state.showSeekIndicator = false;
+    state.seekDelta = Duration.zero;
+    _coordOnSeekEnd();
+    notifyListeners();
+    startHideTimer();
+  }
+
   void onVerticalDragStart(String side) {
     // Block vertical drag during horizontal seek to prevent conflicts
     if (!_coordShouldProcessVerticalDrag() || state.isDraggingX) return;

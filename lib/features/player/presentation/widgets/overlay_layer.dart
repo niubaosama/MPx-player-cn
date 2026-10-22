@@ -96,9 +96,9 @@ class OverlayLayer extends StatelessWidget {
       child: controller.showVolumeIndicator
           ? Align(
               key: const ValueKey<bool>(true),
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.centerRight,
               child: Padding(
-                padding: const EdgeInsets.only(left: 30),
+                padding: const EdgeInsets.only(right: 30),
                 child: _buildVerticalIndicator(
                   icon: controller.volume == 0
                       ? Icons.volume_off
@@ -122,9 +122,9 @@ class OverlayLayer extends StatelessWidget {
       child: controller.showBrightnessIndicator
           ? Align(
               key: const ValueKey<bool>(true),
-              alignment: Alignment.centerRight,
+              alignment: Alignment.centerLeft,
               child: Padding(
-                padding: const EdgeInsets.only(right: 30),
+                padding: const EdgeInsets.only(left: 30),
                 child: _buildVerticalIndicator(
                   icon: Icons.brightness_6,
                   value: controller.brightnessValue / 100,

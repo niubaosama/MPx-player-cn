@@ -166,6 +166,38 @@ void main() {
       expect(controller.playbackDisposed, isTrue);
     });
 
+    test('small vertical movements are ignored and deliberate gestures use lower sensitivity', () {
+      controller.state.volume = 50;
+      controller.onVerticalDragStart('right');
+      controller.onVerticalDragUpdate(-10);
+      controller.onVerticalDragUpdate(-13);
+      expect(controller.volume, 50);
+      verifyNever(mockRepository.setVolume(any));
+      controller.onVerticalDragUpdate(-10);
+      expect(controller.volume, closeTo(51.5, .01));
+      controller.onVerticalDragEnd();
+    });
+
+    test('blocked vertical gesture cannot change volume during horizontal seek', () {
+      controller.state.volume = 50;
+      controller.onHorizontalDragStart(0);
+      controller.onVerticalDragStart('right');
+      controller.onVerticalDragUpdate(-100);
+      expect(controller.volume, 50);
+      controller.onHorizontalDragEnd();
+    });
+
+    test('cancelled drag restores preview and never seeks the repository', () {
+      controller.state.position = const Duration(seconds: 30);
+      controller.state.duration = const Duration(minutes: 2);
+      controller.onHorizontalDragStart(0);
+      controller.onHorizontalDragUpdate(100, 400);
+      controller.cancelHorizontalDrag();
+      expect(controller.position, const Duration(seconds: 30));
+      expect(controller.isDraggingX, isFalse);
+      verifyNever(mockRepository.seek(any));
+    });
+
     group('Initial State', () {
       test('should have correct initial values', () {
         expect(controller.isPlaying, true);

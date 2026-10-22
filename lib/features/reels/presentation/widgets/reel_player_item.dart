@@ -27,6 +27,7 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
   late final MpvPlayerRepository _repository;
   late final PlayerController _controller;
   bool _ready = false;
+  bool _initializing = false;
   String? _error;
   bool _seeking = false;
   bool _longPressing = false;
@@ -45,10 +46,13 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
     if (_ready) { widget.onPosition(_controller.position); }
   }
   Future<void> _initialize() async {
+    if (_initializing) return;
+    _initializing = true;
     try {
       await _repository.player.setPlaylistMode(PlaylistMode.single);
       if (!mounted) { return; }
       await _controller.loadVideoFile(widget.video);
+      if (_error != null) return;
       if (!mounted) { return; }
       if (widget.initialPosition > Duration.zero) {
         await _repository.seek(widget.initialPosition);
@@ -60,10 +64,11 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
       if (mounted) setState(() {});
     } catch (e) {
       if (mounted) { setState(() => _error = e.toString()); }
-    }
+    } finally { _initializing = false; }
   }
   Future<void> _syncPlayback() async {
     if (!_ready || !mounted) { return; }
+    try {
     await _repository.setSpeed(_longPressing ? 2 : widget.playbackSpeed);
     if (!mounted) { return; }
     await _repository.setVolume(widget.isMuted ? 0 : 100);
@@ -72,6 +77,9 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
       await _repository.pause();
     } else {
       await _repository.play();
+    }
+    } catch (error) {
+      if (mounted) { setState(() => _error = error.toString()); }
     }
   }
   @override

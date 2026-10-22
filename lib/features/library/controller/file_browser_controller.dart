@@ -18,12 +18,18 @@ class FileBrowserController extends ChangeNotifier {
 
   static final FileBrowserController _instance = FileBrowserController._internal();
   factory FileBrowserController() => _instance;
-  FileBrowserController._internal() {
+  FileBrowserController._internal() : _browser = DirectoryBrowser(),
+      _indexService = LibraryIndexService() {
     _indexService.addListener(_onIndexChanged);
   }
 
-  final DirectoryBrowser _browser = DirectoryBrowser();
-  final LibraryIndexService _indexService = LibraryIndexService();
+  @visibleForTesting
+  FileBrowserController.forTesting(this._browser, this._indexService) {
+    _indexService.addListener(_onIndexChanged);
+  }
+
+  final DirectoryBrowser _browser;
+  final LibraryIndexService _indexService;
 
   List<FileItem> _items = [];
   List<FileItem> _directoryItems = [];
@@ -78,6 +84,7 @@ class FileBrowserController extends ChangeNotifier {
       );
 
     await loadDirectory(_currentPath, addToHistory: false);
+    if (_disposed) return;
     _isInitialized = true;
     notifyListeners();
     _scheduleIndex();
@@ -109,6 +116,7 @@ class FileBrowserController extends ChangeNotifier {
     _items = filtered;
 
     await _sortItems();
+    if (_disposed || _currentPath != path) return;
     if (!silent) _isLoading = false;
     notifyListeners();
 
@@ -185,6 +193,7 @@ class FileBrowserController extends ChangeNotifier {
     _directoryItems = items;
     _items = _prepareVisibleItems(items);
     await _sortItems();
+    if (_disposed || _currentPath != previousPath) return;
     notifyListeners();
     _startWatching(previousPath);
     _scheduleIndex();
@@ -250,7 +259,9 @@ class FileBrowserController extends ChangeNotifier {
   Future<void> _sortItems() async {
     final revision = ++_visibilityRevision;
     final sorted = await sortFileItemsIsolate(_items, _sortBy, _sortOrder);
-    if (!_disposed && revision == _visibilityRevision) _items = sorted;
+    if (_disposed || revision != _visibilityRevision) return;
+    _items = sorted;
+    notifyListeners();
   }
 
   Future<void> refresh({bool silent = false}) async {
@@ -351,6 +362,7 @@ class FileBrowserController extends ChangeNotifier {
     _directoryItems = items;
     _items = _prepareVisibleItems(items);
     await _sortItems();
+    if (_disposed || _currentPath != watchedPath) return;
     notifyListeners();
   }
 

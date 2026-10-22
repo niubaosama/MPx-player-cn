@@ -41,6 +41,11 @@ class _DoubleTapSeekZoneState extends State<DoubleTapSeekZone> {
     _tapCount++;
     _tapTimer?.cancel();
     _tapTimer = Timer(const Duration(milliseconds: 300), () {
+      if (widget.controller.isDraggingX || widget.controller.isDraggingY ||
+          widget.controller.isLongPressing || widget.controller.isGestureLocked) {
+        _tapCount = 0;
+        return;
+      }
       if (_tapCount == 1) {
         widget.controller.toggleControlsVisibility();
       } else if (_tapCount >= 2) {
@@ -68,11 +73,14 @@ class _DoubleTapSeekZoneState extends State<DoubleTapSeekZone> {
       onVerticalDragStart: widget.onVerticalDragStart,
       onVerticalDragUpdate: widget.onVerticalDragUpdate,
       onVerticalDragEnd: widget.onVerticalDragEnd,
+      onVerticalDragCancel: widget.controller.onVerticalDragEnd,
       onHorizontalDragStart: widget.onHorizontalDragStart,
       onHorizontalDragUpdate: widget.onHorizontalDragUpdate,
       onHorizontalDragEnd: widget.onHorizontalDragEnd,
+      onHorizontalDragCancel: widget.controller.cancelHorizontalDrag,
       onLongPressStart: widget.onLongPressStart,
       onLongPressEnd: widget.onLongPressEnd,
+      onLongPressCancel: widget.controller.onLongPressEnd,
       child: Container(color: Colors.transparent),
     );
   }
