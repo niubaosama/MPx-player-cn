@@ -104,9 +104,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       colors: colors,
                       child: const _StoragePermissionSection(),
                     ),
-                  _buildExpandableSection(index: 6, title: context.tr('Startup screen'),
-                    icon: Icons.rocket_launch_outlined, colors: colors,
-                    child: const StartupSettingsSection()),
+                  _buildExpandableSection(
+                      index: 6,
+                      title: context.tr('Startup screen'),
+                      icon: Icons.rocket_launch_outlined,
+                      colors: colors,
+                      child: const StartupSettingsSection()),
                   SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
                 ],
               ),
@@ -223,7 +226,8 @@ class _LanguageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.tr('Choose the app language. Changes take effect immediately.')),
+          Text(context
+              .tr('Choose the app language. Changes take effect immediately.')),
           const SizedBox(height: 12),
           DropdownButton<AppLanguage>(
             value: settings.language,
@@ -247,7 +251,9 @@ class _LanguageSection extends StatelessWidget {
               final saved = await settings.setLanguage(value);
               if (!saved && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.tr('Could not save language preference. Please try again.'))),
+                  SnackBar(
+                      content: Text(context.tr(
+                          'Could not save language preference. Please try again.'))),
                 );
               }
             },
@@ -287,8 +293,10 @@ class _ThemeSection extends StatelessWidget {
                     width: 150,
                     child: SettingsChoiceCard(
                       icon: SettingsThemeHelpers.getIcon(preference),
-                      title: context.tr(SettingsThemeHelpers.getLabel(preference)),
-                      subtitle: context.tr(SettingsThemeHelpers.getDescription(preference)),
+                      title:
+                          context.tr(SettingsThemeHelpers.getLabel(preference)),
+                      subtitle: context
+                          .tr(SettingsThemeHelpers.getDescription(preference)),
                       isSelected: settings.themePreference == preference,
                       onTap: () => settings.setThemePreference(preference),
                     ),
@@ -336,7 +344,6 @@ class _SubtitleSection extends StatelessWidget {
   }
 }
 
-
 class _EngineSection extends StatelessWidget {
   final AppSettingsController settings;
 
@@ -375,7 +382,8 @@ class _DownloaderSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.tr('Manage on-device downloads and downloader preferences.'),
+            context
+                .tr('Manage on-device downloads and downloader preferences.'),
             style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
@@ -386,7 +394,8 @@ class _DownloaderSection extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.download_for_offline_outlined),
             title: Text(context.tr('Open downloader')),
-            subtitle: Text(context.tr('Queue URLs and manage active downloads')),
+            subtitle:
+                Text(context.tr('Queue URLs and manage active downloads')),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -399,7 +408,8 @@ class _DownloaderSection extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.tune_rounded),
             title: Text(context.tr('Downloader settings')),
-            subtitle: Text(context.tr('Quality, cookies, updates, and diagnostics')),
+            subtitle:
+                Text(context.tr('Quality, cookies, updates, and diagnostics')),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -453,8 +463,10 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
         SnackBar(
           content: Text(
             granted
-                ? context.tr('All files access granted. Restart the app if files still don\'t appear.')
-                : context.tr('Permission not granted. Some features may be limited.'),
+                ? context.tr(
+                    'All files access granted. Restart the app if files still don\'t appear.')
+                : context.tr(
+                    'Permission not granted. Some features may be limited.'),
           ),
         ),
       );
@@ -469,7 +481,8 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.tr('Control how MPx accesses files on your device. Required for full file browsing.'),
+            context.tr(
+                'Control how MPx accesses files on your device. Required for full file browsing.'),
             style: const TextStyle(
               fontSize: 13,
               color: Colors.grey,
@@ -493,7 +506,8 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
                   subtitle: Text(
                     _hasFullAccess
                         ? context.tr('Granted - MPx can access all files')
-                        : context.tr('Not granted - File browsing is limited. Tap to enable.'),
+                        : context.tr(
+                            'Not granted - File browsing is limited. Tap to enable.'),
                   ),
                   trailing: _hasFullAccess
                       ? null
@@ -524,7 +538,8 @@ class _StoragePermissionSectionState extends State<_StoragePermissionSection> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          context.tr('Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.'),
+                          context.tr(
+                              'Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.'),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.amber,

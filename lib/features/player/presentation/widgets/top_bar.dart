@@ -67,9 +67,11 @@ class TopBar extends StatelessWidget {
               ),
             ),
           ),
-          if (onSwitchReels != null) IconButton(
-            tooltip: context.tr('Switch to Reels'), onPressed: onSwitchReels,
-            icon: const Icon(Icons.swipe_vertical, color: Colors.white)),
+          if (onSwitchReels != null)
+            IconButton(
+                tooltip: context.tr('Switch to Reels'),
+                onPressed: onSwitchReels,
+                icon: const Icon(Icons.swipe_vertical, color: Colors.white)),
           const SizedBox(width: 10),
           _MinimalIconButton(
             icon: isLocked ? Icons.lock : Icons.lock_open,

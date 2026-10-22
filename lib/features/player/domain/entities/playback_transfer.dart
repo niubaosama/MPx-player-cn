@@ -7,7 +7,11 @@ class PlaybackTransfer {
   final Duration position;
   final double speed;
   final bool paused;
-  const PlaybackTransfer({required this.videos, required this.index,
-    required this.position, required this.speed, required this.paused});
+  const PlaybackTransfer(
+      {required this.videos,
+      required this.index,
+      required this.position,
+      required this.speed,
+      required this.paused});
   VideoFile get video => videos[index];
 }

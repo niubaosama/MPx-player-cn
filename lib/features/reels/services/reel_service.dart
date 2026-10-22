@@ -15,25 +15,31 @@ class ReelSource {
   final bool isFolder;
   final bool includeSubfolders;
 
-  const ReelSource({required this.path, this.isFolder = true,
-    this.includeSubfolders = true});
+  const ReelSource(
+      {required this.path,
+      this.isFolder = true,
+      this.includeSubfolders = true});
 
-  Map<String, Object> toJson() => {'path': path, 'isFolder': isFolder,
-    'includeSubfolders': includeSubfolders};
+  Map<String, Object> toJson() => {
+        'path': path,
+        'isFolder': isFolder,
+        'includeSubfolders': includeSubfolders
+      };
 
   factory ReelSource.fromJson(Map<String, dynamic> json) => ReelSource(
-    path: p.normalize(json['path'] as String),
-    isFolder: json['isFolder'] as bool? ?? true,
-    includeSubfolders: json['includeSubfolders'] as bool? ?? true,
-  );
+        path: p.normalize(json['path'] as String),
+        isFolder: json['isFolder'] as bool? ?? true,
+        includeSubfolders: json['includeSubfolders'] as bool? ?? true,
+      );
 }
 
 /// 短视频只保存来源引用；原文件和旧版视频副本均保持原位。
 class ReelService {
   static final ReelService _instance = ReelService._internal();
   factory ReelService() => _instance;
-  ReelService._internal() : _index = LibraryIndexService(),
-      _appDirectory = StoragePathService.getAppExternalDirectory;
+  ReelService._internal()
+      : _index = LibraryIndexService(),
+        _appDirectory = StoragePathService.getAppExternalDirectory;
 
   ReelService.forTesting(this._index, this._appDirectory);
 
@@ -51,7 +57,8 @@ class ReelService {
     final parts = p.split(appDir.path);
     final android = parts.indexOf('Android');
     if (android > 0) {
-      candidates.add(p.join(p.joinAll(parts.take(android)), 'Movies', 'mpxReels'));
+      candidates
+          .add(p.join(p.joinAll(parts.take(android)), 'Movies', 'mpxReels'));
     }
     final sources = <ReelSource>[];
     for (final path in candidates) {
@@ -64,7 +71,10 @@ class ReelService {
     await (_initialization ??= _initializeSources());
     final prefs = await SharedPreferences.getInstance();
     final rows = jsonDecode(prefs.getString(_sourcesKey) ?? '[]') as List;
-    return rows.map((row) => ReelSource.fromJson(Map<String, dynamic>.from(row as Map))).toList();
+    return rows
+        .map(
+            (row) => ReelSource.fromJson(Map<String, dynamic>.from(row as Map)))
+        .toList();
   }
 
   Future<void> _save(List<ReelSource> sources) async {
@@ -74,7 +84,8 @@ class ReelService {
     if (!saved) throw StateError('Failed to save Reels sources');
   }
 
-  Future<void> _change(List<ReelSource> Function(List<ReelSource>) update) async {
+  Future<void> _change(
+      List<ReelSource> Function(List<ReelSource>) update) async {
     final previous = _pendingChange;
     final completed = Completer<void>();
     _pendingChange = completed.future;
@@ -87,40 +98,57 @@ class ReelService {
     }
   }
 
-  Future<void> importFolder(String path, {bool includeSubfolders = true}) async {
+  Future<void> importFolder(String path,
+      {bool includeSubfolders = true}) async {
     path = p.normalize(p.absolute(path));
-    if (!await Directory(path).exists()) { throw FileSystemException('Folder not found', path); }
+    if (!await Directory(path).exists()) {
+      throw FileSystemException('Folder not found', path);
+    }
     // 校验访问权限，不复制文件，也不创建目标目录。
     await Directory(path).list(followLinks: false).take(1).drain<void>();
     final source = ReelSource(path: path, includeSubfolders: includeSubfolders);
-    await _change((sources) => sources.any((item) =>
-        item.path == source.path && item.isFolder) ? sources : [
-      ...sources.where((item) => item.path != source.path), source,
-    ]);
+    await _change((sources) =>
+        sources.any((item) => item.path == source.path && item.isFolder)
+            ? sources
+            : [
+                ...sources.where((item) => item.path != source.path),
+                source,
+              ]);
     await _index.ensureIndexed(path, forceRefresh: true);
   }
 
   Future<void> importVideoFile(String path) async {
     path = p.normalize(p.absolute(path));
-    if (!await File(path).exists()) { throw FileSystemException('Video not found', path); }
-    if (!FileItem.isVideoFileName(p.basename(path))) { throw ArgumentError('Not a video file'); }
+    if (!await File(path).exists()) {
+      throw FileSystemException('Video not found', path);
+    }
+    if (!FileItem.isVideoFileName(p.basename(path))) {
+      throw ArgumentError('Not a video file');
+    }
     final source = ReelSource(path: path, isFolder: false);
     await _change((sources) => [
-      ...sources.where((item) => item.path != source.path), source,
-    ]);
+          ...sources.where((item) => item.path != source.path),
+          source,
+        ]);
   }
 
   Future<void> removeSource(String path) =>
       _change((sources) => sources.where((item) => item.path != path).toList());
 
-  Future<void> setIncludeSubfolders(String path, bool enabled) => _change((sources) =>
-    sources.map((item) => item.path == path ? ReelSource(path: path,
-        isFolder: item.isFolder, includeSubfolders: enabled) : item).toList());
+  Future<void> setIncludeSubfolders(String path, bool enabled) =>
+      _change((sources) => sources
+          .map((item) => item.path == path
+              ? ReelSource(
+                  path: path,
+                  isFolder: item.isFolder,
+                  includeSubfolders: enabled)
+              : item)
+          .toList());
 
   Future<List<VideoFile>> getVideosFromAnyFolder(String path,
-      {bool includeSubfolders = true, bool forceRefresh = false}) =>
-      _index.getVideosInFolder(path, includeSubfolders: includeSubfolders,
-          forceRefresh: forceRefresh);
+          {bool includeSubfolders = true, bool forceRefresh = false}) =>
+      _index.getVideosInFolder(path,
+          includeSubfolders: includeSubfolders, forceRefresh: forceRefresh);
 
   Future<List<VideoFile>> getReelsVideos({bool forceRefresh = false}) async {
     final sources = await getSources();
@@ -131,24 +159,33 @@ class ReelService {
     final refreshedRoots = <String>[];
     for (final source in folders) {
       if (!await Directory(source.path).exists()) continue;
-      final refresh = forceRefresh && !refreshedRoots.any((root) =>
-          root == source.path || p.isWithin(root, source.path));
+      final refresh = forceRefresh &&
+          !refreshedRoots.any(
+              (root) => root == source.path || p.isWithin(root, source.path));
       final found = await getVideosFromAnyFolder(source.path,
           includeSubfolders: source.includeSubfolders, forceRefresh: refresh);
       if (refresh) refreshedRoots.add(source.path);
-      for (final video in found) { videos[video.path] = video; }
+      for (final video in found) {
+        videos[video.path] = video;
+      }
     }
     for (final source in sources.where((source) => !source.isFolder)) {
       if (videos.containsKey(source.path)) continue;
       final file = File(source.path);
       if (!await file.exists()) continue;
       final stat = await file.stat();
-      videos[source.path] = VideoFile.fromFileItem(FileItem(path: source.path,
-          name: p.basename(source.path), isDirectory: false, size: stat.size,
-          modified: stat.modified), p.dirname(source.path));
+      videos[source.path] = VideoFile.fromFileItem(
+          FileItem(
+              path: source.path,
+              name: p.basename(source.path),
+              isDirectory: false,
+              size: stat.size,
+              modified: stat.modified),
+          p.dirname(source.path));
     }
     return videos.values.toList();
   }
+
   Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async {
     final volumes = <Directory>[await _appDirectory()];
     if (Platform.isAndroid) {
@@ -162,10 +199,12 @@ class ReelService {
     }
     final videos = <String, VideoFile>{};
     for (final root in roots) {
-      final snapshot = await _index.ensureIndexed(root, forceRefresh: forceRefresh);
-      for (final video in snapshot.videos) { videos[video.path] = video; }
+      final snapshot =
+          await _index.ensureIndexed(root, forceRefresh: forceRefresh);
+      for (final video in snapshot.videos) {
+        videos[video.path] = video;
+      }
     }
     return videos.values.toList();
   }
-
 }

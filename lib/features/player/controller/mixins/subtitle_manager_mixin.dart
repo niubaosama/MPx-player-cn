@@ -104,7 +104,7 @@ mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
     } else if (video != null) {
       final savedTrack =
           await HistoryService.getSelectedSubtitleTrack(video.id);
-    if (playbackDisposed) return;
+      if (playbackDisposed) return;
       if (savedTrack != null && savedTrack.isNotEmpty) {
         final idx = tracks.indexWhere((t) {
           final title = t.title?.trim();
@@ -120,7 +120,7 @@ mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
           state.currentSubtitleTrackIndex = idx;
           state.subtitlesEnabled = true;
           await repository.setSubtitleTrack(idx);
-    if (playbackDisposed) return;
+          if (playbackDisposed) return;
         }
       } else if (state.currentSubtitleTrackIndex >= tracks.length) {
         state.currentSubtitleTrackIndex = 0;
@@ -154,7 +154,7 @@ mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
               ? lang.toUpperCase()
               : 'Subtitle ${index + 1}';
       await HistoryService.saveSelectedSubtitleTrack(video.id, label);
-    if (playbackDisposed) return;
+      if (playbackDisposed) return;
     }
     notifyListeners();
   }
@@ -168,10 +168,10 @@ mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
     if (video != null) {
       try {
         final existing = await HistoryService.getSubtitlePaths(video.id);
-    if (playbackDisposed) return;
+        if (playbackDisposed) return;
         if (!existing.contains(path)) {
           await HistoryService.saveSubtitlePaths(video.id, [...existing, path]);
-    if (playbackDisposed) return;
+          if (playbackDisposed) return;
         }
       } catch (_) {}
     }
@@ -183,10 +183,10 @@ mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
       if (state.currentSubtitleTrackIndex >= 0 &&
           state.currentSubtitleTrackIndex < state.subtitleTracks.length) {
         await repository.setSubtitleTrack(state.currentSubtitleTrackIndex);
-    if (playbackDisposed) return;
+        if (playbackDisposed) return;
       } else {
         await repository.enableSubtitles();
-    if (playbackDisposed) return;
+        if (playbackDisposed) return;
       }
     }
   }

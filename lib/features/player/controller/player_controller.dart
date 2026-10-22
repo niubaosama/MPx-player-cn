@@ -178,7 +178,9 @@ class PlayerController extends ChangeNotifier
     );
 
     initializeSubtitles();
-    initialized = Future.wait<void>([initializeVolume(), initializeBrightness()]).then((_) {});
+    initialized =
+        Future.wait<void>([initializeVolume(), initializeBrightness()])
+            .then((_) {});
     _loadSeekSettings();
     _setupListeners();
   }
@@ -225,7 +227,8 @@ class PlayerController extends ChangeNotifier
     }));
 
     trackPlaybackSubscription(_repository.audioTracksStream.listen((_) {
-      schedulePlaybackTask('audio-tracks', const Duration(milliseconds: 100), loadAudioTracks);
+      schedulePlaybackTask(
+          'audio-tracks', const Duration(milliseconds: 100), loadAudioTracks);
     }));
 
     trackPlaybackSubscription(_repository.completedStream.listen((completed) {
@@ -262,7 +265,8 @@ class PlayerController extends ChangeNotifier
     _startAutoSaveTimer();
   }
 
-  bool _isCurrentVideo(VideoFile video) => !playbackDisposed && identical(_currentVideo, video);
+  bool _isCurrentVideo(VideoFile video) =>
+      !playbackDisposed && identical(_currentVideo, video);
 
   Future<void> _loadSidecarSubtitles(VideoFile video) async {
     final directory = dart_io.Directory(path.dirname(video.path));
@@ -272,8 +276,12 @@ class PlayerController extends ChangeNotifier
     try {
       await for (final entity in directory.list(followLinks: false)) {
         if (!_isCurrentVideo(video)) return;
-        if (entity is dart_io.File && extensions.contains(path.extension(entity.path).toLowerCase()) &&
-            path.basenameWithoutExtension(entity.path).toLowerCase().startsWith(base)) {
+        if (entity is dart_io.File &&
+            extensions.contains(path.extension(entity.path).toLowerCase()) &&
+            path
+                .basenameWithoutExtension(entity.path)
+                .toLowerCase()
+                .startsWith(base)) {
           subtitlePaths.add(entity.path);
         }
       }
@@ -293,7 +301,8 @@ class PlayerController extends ChangeNotifier
     if (subtitlePaths.isNotEmpty) {
       final existing = await HistoryService.getSubtitlePaths(video.id);
       if (!_isCurrentVideo(video)) return;
-      await HistoryService.saveSubtitlePaths(video.id, {...existing, ...subtitlePaths}.toList());
+      await HistoryService.saveSubtitlePaths(
+          video.id, {...existing, ...subtitlePaths}.toList());
       if (!_isCurrentVideo(video)) return;
     }
     loadSubtitleTracks();

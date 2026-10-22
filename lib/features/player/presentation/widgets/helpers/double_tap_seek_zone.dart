@@ -41,8 +41,10 @@ class _DoubleTapSeekZoneState extends State<DoubleTapSeekZone> {
     _tapCount++;
     _tapTimer?.cancel();
     _tapTimer = Timer(const Duration(milliseconds: 300), () {
-      if (widget.controller.isDraggingX || widget.controller.isDraggingY ||
-          widget.controller.isLongPressing || widget.controller.isGestureLocked) {
+      if (widget.controller.isDraggingX ||
+          widget.controller.isDraggingY ||
+          widget.controller.isLongPressing ||
+          widget.controller.isGestureLocked) {
         _tapCount = 0;
         return;
       }

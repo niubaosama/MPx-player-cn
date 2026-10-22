@@ -197,7 +197,8 @@ mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
     state.showSeekIndicator = true;
     state.seekDirection = direction;
     notifyListeners();
-    schedulePlaybackTask('seek-feedback', const Duration(milliseconds: 500), () {
+    schedulePlaybackTask('seek-feedback', const Duration(milliseconds: 500),
+        () {
       state.showSeekIndicator = false;
       notifyListeners();
     });
@@ -211,7 +212,8 @@ mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
     }
     notifyListeners();
 
-    schedulePlaybackTask('double-tap-feedback', const Duration(milliseconds: 400), () {
+    schedulePlaybackTask(
+        'double-tap-feedback', const Duration(milliseconds: 400), () {
       state.showDoubleTapSeekLeft = false;
       state.showDoubleTapSeekRight = false;
       notifyListeners();
@@ -291,7 +293,7 @@ mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
     state.audioTracks = tracks;
     if (tracks.isNotEmpty && video != null) {
       final savedTrack = await HistoryService.getSelectedAudioTrack(video.id);
-    if (playbackDisposed) return;
+      if (playbackDisposed) return;
       if (savedTrack != null && savedTrack.isNotEmpty) {
         final idx = tracks.indexWhere((t) {
           final title = t.title?.trim();
@@ -326,7 +328,7 @@ mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
               ? lang.toUpperCase()
               : 'Track ${index + 1}';
       await HistoryService.saveSelectedAudioTrack(video.id, label);
-    if (playbackDisposed) return;
+      if (playbackDisposed) return;
     }
     notifyListeners();
   }

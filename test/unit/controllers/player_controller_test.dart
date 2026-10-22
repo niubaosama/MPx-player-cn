@@ -166,7 +166,9 @@ void main() {
       expect(controller.playbackDisposed, isTrue);
     });
 
-    test('small vertical movements are ignored and deliberate gestures use lower sensitivity', () {
+    test(
+        'small vertical movements are ignored and deliberate gestures use lower sensitivity',
+        () {
       controller.state.volume = 50;
       controller.onVerticalDragStart('right');
       controller.onVerticalDragUpdate(-10);
@@ -178,7 +180,8 @@ void main() {
       controller.onVerticalDragEnd();
     });
 
-    test('blocked vertical gesture cannot change volume during horizontal seek', () {
+    test('blocked vertical gesture cannot change volume during horizontal seek',
+        () {
       controller.state.volume = 50;
       controller.onHorizontalDragStart(0);
       controller.onVerticalDragStart('right');

@@ -41,7 +41,8 @@ class DirectoryBrowser {
       // These work on all Android versions and profiles (including Secure Folder).
       if (dirs.isEmpty) {
         try {
-          final appVolumes = await StoragePathService.getAccessibleStorageVolumes();
+          final appVolumes =
+              await StoragePathService.getAccessibleStorageVolumes();
           for (final dir in appVolumes) {
             if (await dir.exists()) {
               dirs.add(dir.path);
@@ -96,18 +97,24 @@ class DirectoryBrowser {
           final stat = await entity.stat();
           if (stat.type == FileSystemEntityType.notFound) return null;
           final isDirectory = entity is Directory;
-          return FileItem(path: entity.path, name: entity.path.split('/').last,
-              isDirectory: isDirectory, size: isDirectory ? 0 : stat.size,
+          return FileItem(
+              path: entity.path,
+              name: entity.path.split('/').last,
+              isDirectory: isDirectory,
+              size: isDirectory ? 0 : stat.size,
               modified: stat.modified);
         }));
         items.addAll(loaded.whereType<FileItem>());
       }
+
       // 有界并发读取属性，避免大目录逐个等待 stat，也避免同时打开过多任务。
       await for (final entity in dir.list(followLinks: false)) {
         final name = entity.path.split('/').last;
         if (name.startsWith('.')) continue;
         if (entity is! Directory &&
-            (entity is! File || !FileItem.isVideoFileName(name))) { continue; }
+            (entity is! File || !FileItem.isVideoFileName(name))) {
+          continue;
+        }
         batch.add(entity);
         if (batch.length >= 16) await readBatch();
       }

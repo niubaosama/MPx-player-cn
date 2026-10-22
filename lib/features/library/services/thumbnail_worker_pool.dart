@@ -140,14 +140,16 @@ class ThumbnailWorkerPool {
       await _acquireJob();
       String? path;
       try {
-      path = await _generateThumbnailFile(
-        videoPath,
-        _thumbnailDir!,
-        timeMs: timeMs,
-        smartTimestamp: smartTimestamp,
-        durationMs: durationMs,
-      );
-      } finally { _releaseJob(); }
+        path = await _generateThumbnailFile(
+          videoPath,
+          _thumbnailDir!,
+          timeMs: timeMs,
+          smartTimestamp: smartTimestamp,
+          durationMs: durationMs,
+        );
+      } finally {
+        _releaseJob();
+      }
 
       _pendingRequests.remove(videoPath);
       completer.complete(path);

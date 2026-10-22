@@ -81,8 +81,8 @@ jobs:
         timeout-minutes: 5
         run: flutter test
 
-      - name: 检查下载模块的汉化
-        run: python -B -m unittest discover -s test -p 'downloader_localization_test.py' -v
+      - name: 检查下载汉化与数据库迁移
+        run: python -B -m unittest discover -s test -p '*_test.py' -v
 
       # 云端先生成构建产物，下载后使用仅保存在本机的固定私有密钥签名。
       # 分批修改先运行检查；最终提交带 [build-apk] 时生成安装包。

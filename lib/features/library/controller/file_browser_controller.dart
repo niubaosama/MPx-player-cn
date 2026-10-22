@@ -16,10 +16,12 @@ class FileBrowserController extends ChangeNotifier {
   static String? _persistedCurrentPath;
   static List<String> _persistedPathHistory = <String>[];
 
-  static final FileBrowserController _instance = FileBrowserController._internal();
+  static final FileBrowserController _instance =
+      FileBrowserController._internal();
   factory FileBrowserController() => _instance;
-  FileBrowserController._internal() : _browser = DirectoryBrowser(),
-      _indexService = LibraryIndexService() {
+  FileBrowserController._internal()
+      : _browser = DirectoryBrowser(),
+        _indexService = LibraryIndexService() {
     _indexService.addListener(_onIndexChanged);
   }
 
@@ -177,7 +179,9 @@ class FileBrowserController extends ChangeNotifier {
     final revision = ++_visibilityRevision;
     final items = _prepareVisibleItems(_directoryItems);
     unawaited(sortFileItemsIsolate(items, _sortBy, _sortOrder).then((sorted) {
-      if (_disposed || path != _currentPath || revision != _visibilityRevision) return;
+      if (_disposed || path != _currentPath || revision != _visibilityRevision) {
+        return;
+      }
       _items = sorted;
       notifyListeners();
     }));

@@ -39,7 +39,6 @@ class ResumePlaybackHelper {
       attempts++;
     }
 
-
     // Get the saved position
     final savedPosition = await HistoryService.getLastPosition(videoId);
     if (controller.playbackDisposed || savedPosition == null) return null;

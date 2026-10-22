@@ -29,20 +29,21 @@ class ReelsSortMenu extends StatelessWidget {
           if (value == 'refresh') onRefresh?.call();
         },
         itemBuilder: (context) => [
-          if (onRefresh != null) PopupMenuItem(value: 'refresh', child: Text(context.tr('Refresh'))),
-           PopupMenuItem(
+          if (onRefresh != null)
+            PopupMenuItem(value: 'refresh', child: Text(context.tr('Refresh'))),
+          PopupMenuItem(
             value: ReelsSortOrder.dateDesc,
             child: Text(context.tr('Newest First')),
           ),
-           PopupMenuItem(
+          PopupMenuItem(
             value: ReelsSortOrder.dateAsc,
             child: Text(context.tr('Oldest First')),
           ),
-           PopupMenuItem(
+          PopupMenuItem(
             value: ReelsSortOrder.nameAsc,
             child: Text(context.tr('By Name')),
           ),
-           PopupMenuItem(
+          PopupMenuItem(
             value: ReelsSortOrder.shuffle,
             child: Text(context.tr('Shuffle')),
           ),

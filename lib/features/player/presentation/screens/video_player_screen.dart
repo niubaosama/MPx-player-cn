@@ -77,7 +77,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      if (_isInPipMode) { return; }
+      if (_isInPipMode) {
+        return;
+      }
       _controller?.pauseVideo();
       _controller?.savePositionOnBackground();
     }
@@ -89,12 +91,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     try {
       await controller.loadVideoFile(widget.video);
       if (!mounted || controller.playbackDisposed) return;
-      if (widget.initialPosition != null) { controller.seek(widget.initialPosition!); }
-      if (widget.initialPlaybackSpeed != null) { controller.setSpeed(widget.initialPlaybackSpeed!); }
+      if (widget.initialPosition != null) {
+        controller.seek(widget.initialPosition!);
+      }
+      if (widget.initialPlaybackSpeed != null) {
+        controller.setSpeed(widget.initialPlaybackSpeed!);
+      }
       if (widget.initiallyPaused) controller.pauseVideo();
     } catch (error) {
       if (mounted) setState(() => _loadError = error.toString());
-    } finally { _loading = false; }
+    } finally {
+      _loading = false;
+    }
   }
 
   @override
@@ -103,39 +111,53 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     // Provider automatically handles disposal via controller.dispose()
     return ChangeNotifierProvider(
       create: (_) {
-        final repository = MpvPlayerRepository(autoPlay: !widget.initiallyPaused);
+        final repository =
+            MpvPlayerRepository(autoPlay: !widget.initiallyPaused);
         final controller = PlayerController(repository);
         _controller = controller;
-        controller.trackPlaybackSubscription(repository.player.stream.error.listen((error) {
-          if (mounted && error.isNotEmpty) { setState(() => _loadError = error); }
+        controller.trackPlaybackSubscription(
+            repository.player.stream.error.listen((error) {
+          if (mounted && error.isNotEmpty) {
+            setState(() => _loadError = error);
+          }
         }));
         _loadInitial(controller);
         controller.startHideTimer();
         return controller;
       },
       child: Stack(fit: StackFit.expand, children: [
-      _VideoPlayerScreenContent(
-        video: widget.video,
-        playlist: widget.playlist,
-        initialPlaylistIndex: widget.initialPlaylistIndex ?? 0,
-        onPipModeChanged: _setPipMode,
-        isInPipMode: _isInPipMode,
-        skipHistoryResume: widget.initialPosition != null,
-        returnPlaybackState: widget.returnPlaybackState,
-        onPlaybackChanged: widget.onPlaybackChanged,
-      ),
-      if (_loadError != null) Center(child: Material(color: Colors.black87,
-        borderRadius: BorderRadius.circular(16), child: Padding(padding: const EdgeInsets.all(20),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(context.tr('Unable to play this video'), style: const TextStyle(color: Colors.white)),
-            const SizedBox(height: 8),
-            Text(_loadError!, maxLines: 3, style: const TextStyle(color: Colors.white60)),
-            TextButton(onPressed: () {
-              setState(() => _loadError = null);
-              final controller = _controller;
-              if (controller != null) _loadInitial(controller);
-            }, child: Text(context.tr('Retry'))),
-          ])))),
+        _VideoPlayerScreenContent(
+          video: widget.video,
+          playlist: widget.playlist,
+          initialPlaylistIndex: widget.initialPlaylistIndex ?? 0,
+          onPipModeChanged: _setPipMode,
+          isInPipMode: _isInPipMode,
+          skipHistoryResume: widget.initialPosition != null,
+          returnPlaybackState: widget.returnPlaybackState,
+          onPlaybackChanged: widget.onPlaybackChanged,
+        ),
+        if (_loadError != null)
+          Center(
+              child: Material(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Text(context.tr('Unable to play this video'),
+                            style: const TextStyle(color: Colors.white)),
+                        const SizedBox(height: 8),
+                        Text(_loadError!,
+                            maxLines: 3,
+                            style: const TextStyle(color: Colors.white60)),
+                        TextButton(
+                            onPressed: () {
+                              setState(() => _loadError = null);
+                              final controller = _controller;
+                              if (controller != null) _loadInitial(controller);
+                            },
+                            child: Text(context.tr('Retry'))),
+                      ])))),
       ]),
     );
   }
@@ -182,7 +204,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     super.initState();
     if (widget.playlist != null && widget.playlist!.isNotEmpty) {
       _playlist = widget.playlist!;
-      _currentIndex = widget.initialPlaylistIndex.clamp(0, _playlist.length - 1);
+      _currentIndex =
+          widget.initialPlaylistIndex.clamp(0, _playlist.length - 1);
     } else {
       _playlist = [widget.video];
       _currentIndex = 0;
@@ -192,15 +215,21 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     // Check for auto-resume after a short delay to ensure video is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !widget.skipHistoryResume) { _checkAndResumePlayback(); }
-      if (!mounted) { return; }
+      if (mounted && !widget.skipHistoryResume) {
+        _checkAndResumePlayback();
+      }
+      if (!mounted) {
+        return;
+      }
       _recordVideoInHistory();
       _initPip();
     });
   }
 
   void _initPip() {
-    if (!Platform.isAndroid) { return; }
+    if (!Platform.isAndroid) {
+      return;
+    }
     setState(() => _showPipButton = true);
   }
 
@@ -213,7 +242,9 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
   Future<void> _recordVideoInHistory() async {
     final existing = await HistoryService.getHistoryEntry(widget.video.id);
-    if (existing != null) { return; }
+    if (existing != null) {
+      return;
+    }
     await HistoryService.recordPlayback(
       video: widget.video,
       position: Duration.zero,
@@ -282,7 +313,9 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, Object? result) {
-        if (!didPop) { _leavePlayer(); }
+        if (!didPop) {
+          _leavePlayer();
+        }
       },
       child: PipWidget(
         pipLayout: PipActionsLayout.media,
@@ -366,11 +399,16 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
   bool _leaving = false;
   PlaybackTransfer _transfer(PlayerController controller) => PlaybackTransfer(
-    videos: List.of(_playlist), index: _currentIndex, position: controller.position,
-    speed: controller.playbackSpeed, paused: !controller.isPlaying);
+      videos: List.of(_playlist),
+      index: _currentIndex,
+      position: controller.position,
+      speed: controller.playbackSpeed,
+      paused: !controller.isPlaying);
 
   Future<void> _leavePlayer() async {
-    if (_leaving) { return; }
+    if (_leaving) {
+      return;
+    }
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
@@ -379,11 +417,15 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    if (mounted) { Navigator.of(context).pop(widget.returnPlaybackState ? playback : null); }
+    if (mounted) {
+      Navigator.of(context).pop(widget.returnPlaybackState ? playback : null);
+    }
   }
 
   Future<void> _switchToReels() async {
-    if (_leaving) { return; }
+    if (_leaving) {
+      return;
+    }
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
@@ -392,9 +434,13 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     Navigator.of(context).pushReplacement(MaterialPageRoute<PlaybackTransfer>(
-      builder: (_) => ReelsScreen(initialPlayback: playback, onPlaybackChanged: widget.onPlaybackChanged)));
+        builder: (_) => ReelsScreen(
+            initialPlayback: playback,
+            onPlaybackChanged: widget.onPlaybackChanged)));
   }
 
   void _showSubtitleSettings(
@@ -476,7 +522,9 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     setState(() => _overlayMessage = message);
     _messageTimer?.cancel();
     _messageTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) { setState(() => _overlayMessage = null); }
+      if (mounted) {
+        setState(() => _overlayMessage = null);
+      }
     });
   }
 

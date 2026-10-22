@@ -46,3 +46,5 @@ app.*.map.json
 # PRODUCTION_STATUS_REPORT.md
 # PRODUCTION_ROADMAP.md
 # APP_UNDERSTANDING_GUIDE.md
+# 本机固定签名私钥与密码，不上传仓库。
+/.signing/

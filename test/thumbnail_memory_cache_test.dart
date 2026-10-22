@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mpx/features/library/services/thumbnail_cache.dart';
+
 void main() {
   test('oversized thumbnail cannot exceed the cache memory budget', () {
     final cache = ThumbnailMemoryCache();
@@ -15,7 +16,9 @@ void main() {
   test('thumbnail cache evicts least recently used entries', () {
     final cache = ThumbnailMemoryCache();
     cache.clear();
-    for (var i = 0; i < 200; i++) { cache.put('$i', Uint8List(1)); }
+    for (var i = 0; i < 200; i++) {
+      cache.put('$i', Uint8List(1));
+    }
     cache.get('0');
     cache.put('new', Uint8List(1));
     expect(cache.get('1'), isNull);

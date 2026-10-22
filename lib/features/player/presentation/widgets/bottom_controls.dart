@@ -96,16 +96,18 @@ class _BottomControlsState extends State<BottomControls> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PlaybackSeekBar(position: widget.position, duration: widget.duration,
-            onSeekStart: widget.onSeekStart,
-            onSeekChanged: (value) {
-              setState(() => _dragValue = value);
-              widget.onSeekChanged(value);
-            },
-            onSeekEnd: (value) {
-              widget.onSeekEnd(value);
-              setState(() => _dragValue = null);
-            }),
+          PlaybackSeekBar(
+              position: widget.position,
+              duration: widget.duration,
+              onSeekStart: widget.onSeekStart,
+              onSeekChanged: (value) {
+                setState(() => _dragValue = value);
+                widget.onSeekChanged(value);
+              },
+              onSeekEnd: (value) {
+                widget.onSeekEnd(value);
+                setState(() => _dragValue = null);
+              }),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

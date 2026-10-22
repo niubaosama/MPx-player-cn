@@ -233,7 +233,8 @@ class OverlayLayer extends StatelessWidget {
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     if (minutes > 0) {
-      return context.tr('{value0}m {value1}s', {'value0': minutes, 'value1': seconds});
+      return context
+          .tr('{value0}m {value1}s', {'value0': minutes, 'value1': seconds});
     }
     return context.tr('{value0}s', {'value0': seconds});
   }

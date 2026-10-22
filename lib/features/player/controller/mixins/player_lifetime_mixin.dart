@@ -25,9 +25,13 @@ mixin PlayerLifetimeMixin on ChangeNotifier {
 
   void disposePlaybackLifetime() {
     _playbackDisposed = true;
-    for (final timer in _timers.values) { timer.cancel(); }
+    for (final timer in _timers.values) {
+      timer.cancel();
+    }
     _timers.clear();
-    for (final subscription in _subscriptions) { unawaited(subscription.cancel()); }
+    for (final subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
     _subscriptions.clear();
   }
 }

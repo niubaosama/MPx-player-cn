@@ -5,9 +5,16 @@ import 'package:mpx/features/reels/controllers/reels_controller.dart';
 import 'package:mpx/features/reels/services/reel_service.dart';
 import 'package:mpx/features/library/domain/entities/video_file.dart';
 
-VideoFile video(String name, int date) => VideoFile(id: name, path: '/videos/$name.mp4',
-  title: name, folderPath: '/videos', folderName: 'videos', size: 100, duration: 600000,
-  dateAdded: DateTime(2026, 1, date));
+VideoFile video(String name, int date) => VideoFile(
+    id: name,
+    path: '/videos/$name.mp4',
+    title: name,
+    folderPath: '/videos',
+    folderName: 'videos',
+    size: 100,
+    duration: 600000,
+    dateAdded: DateTime(2026, 1, date));
+
 class SessionService extends Fake implements ReelService {
   Completer<void>? pendingRefresh;
   List<VideoFile> folders = [video('a', 1), video('b', 2), video('c', 3)];
@@ -19,13 +26,17 @@ class SessionService extends Fake implements ReelService {
     if (forceRefresh && pendingRefresh != null) await pendingRefresh!.future;
     return List.of(folders);
   }
+
   @override
-  Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async => List.of(local);
+  Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async =>
+      List.of(local);
 }
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  test('refresh and sorting retain current video and playback position', () async {
+  test('refresh and sorting retain current video and playback position',
+      () async {
     final service = SessionService();
     final controller = ReelsController(service: service);
     await controller.initialized;
@@ -46,7 +57,9 @@ void main() {
     expect(controller.playbackSpeed, 1.5);
     controller.dispose();
   });
-  test('random queue survives mode changes without reshuffling or losing position', () async {
+  test(
+      'random queue survives mode changes without reshuffling or losing position',
+      () async {
     final controller = ReelsController(service: SessionService());
     await controller.initialized;
     await controller.setSourceMode(ReelsSourceMode.localRandom);
@@ -64,11 +77,17 @@ void main() {
     expect(controller.reelsVideos.map((video) => video.path), order);
     controller.dispose();
   });
-  test('normal player handoff keeps supplied queue order, index and playback intent', () async {
+  test(
+      'normal player handoff keeps supplied queue order, index and playback intent',
+      () async {
     final videos = [video('b', 2), video('a', 1)];
-    final controller = ReelsController(service: SessionService(), initialVideos: videos,
-      initialVideoPath: videos[1].path, initialPosition: const Duration(seconds: 80),
-      initialSpeed: 1.25, initiallyPaused: true);
+    final controller = ReelsController(
+        service: SessionService(),
+        initialVideos: videos,
+        initialVideoPath: videos[1].path,
+        initialPosition: const Duration(seconds: 80),
+        initialSpeed: 1.25,
+        initiallyPaused: true);
     await controller.initialized;
     expect(controller.reelsVideos.map((video) => video.id), ['b', 'a']);
     expect(controller.currentIndex, 1);
@@ -77,19 +96,24 @@ void main() {
     expect(controller.isPaused, isTrue);
     controller.dispose();
   });
-  test('missing current video falls back safely while retaining remaining queue', () async {
+  test(
+      'missing current video falls back safely while retaining remaining queue',
+      () async {
     final service = SessionService();
     final controller = ReelsController(service: service);
     await controller.initialized;
     controller.selectIndex(1);
-    service.folders.removeWhere((video) => video.path == controller.currentVideo!.path);
+    service.folders
+        .removeWhere((video) => video.path == controller.currentVideo!.path);
     await controller.loadReels(forceRefresh: true);
     expect(controller.currentIndex, 0);
     expect(controller.reelsVideos.length, 2);
     expect(controller.currentVideo, isNotNull);
     controller.dispose();
   });
-  test('refresh completion does not jump back when user advances during scanning', () async {
+  test(
+      'refresh completion does not jump back when user advances during scanning',
+      () async {
     final service = SessionService();
     final controller = ReelsController(service: service);
     await controller.initialized;
@@ -106,11 +130,15 @@ void main() {
   });
 
   test('source mode restores from preferences', () async {
-    SharedPreferences.setMockInitialValues({'reels_source_mode': 'localRandom'});
+    SharedPreferences.setMockInitialValues(
+        {'reels_source_mode': 'localRandom'});
     final controller = ReelsController(service: SessionService());
     await controller.initialized;
     expect(controller.sourceMode, ReelsSourceMode.localRandom);
-    expect(controller.reelsVideos.every((video) => ['x','y','z'].contains(video.id)), isTrue);
+    expect(
+        controller.reelsVideos
+            .every((video) => ['x', 'y', 'z'].contains(video.id)),
+        isTrue);
     controller.dispose();
   });
 }

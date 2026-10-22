@@ -13,30 +13,67 @@ class Probe extends StatefulWidget {
   @override
   State<Probe> createState() => _ProbeState();
 }
+
 class _ProbeState extends State<Probe> {
   @override
-  void initState() { super.initState(); widget.onChange(1); }
+  void initState() {
+    super.initState();
+    widget.onChange(1);
+  }
+
   @override
-  void dispose() { widget.onChange(-1); super.dispose(); }
+  void dispose() {
+    widget.onChange(-1);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Center(child: Text(widget.path));
 }
+
 void main() {
-  testWidgets('tab changes and route replacement keep one visible player and restore the session', (tester) async {
-    final videos = List.generate(3, (i) => VideoFile(id: '$i', path: '/videos/$i.mp4',
-      title: '$i.mp4', folderPath: '/videos', folderName: 'videos', size: 10,
-      duration: 100000, dateAdded: DateTime(2026, 1, i + 1)));
-    final controller = ReelsController(initialVideos: videos, initialVideoPath: videos[1].path,
-      initialPosition: const Duration(seconds: 40), initialSpeed: 1.5, initiallyPaused: true);
+  testWidgets(
+      'tab changes and route replacement keep one visible player and restore the session',
+      (tester) async {
+    final videos = List.generate(
+        3,
+        (i) => VideoFile(
+            id: '$i',
+            path: '/videos/$i.mp4',
+            title: '$i.mp4',
+            folderPath: '/videos',
+            folderName: 'videos',
+            size: 10,
+            duration: 100000,
+            dateAdded: DateTime(2026, 1, i + 1)));
+    final controller = ReelsController(
+        initialVideos: videos,
+        initialVideoPath: videos[1].path,
+        initialPosition: const Duration(seconds: 40),
+        initialSpeed: 1.5,
+        initiallyPaused: true);
     final active = ValueNotifier(true);
     final navigator = GlobalKey<NavigatorState>();
     var livePlayers = 0;
     var peakPlayers = 0;
-    await tester.pumpWidget(MaterialApp(navigatorKey: navigator, localizationsDelegates: const [AppLocalizations.delegate],
-      home: ChangeNotifierProvider.value(value: controller, child: ValueListenableBuilder<bool>(
-        valueListenable: active, builder: (_, value, __) => ReelsScreen(isActive: value,
-          playerBuilder: (_, video, session) => Probe(key: ValueKey(video.path), path: video.path,
-            onChange: (delta) { livePlayers += delta; if (livePlayers > peakPlayers) { peakPlayers = livePlayers; } }))))));
+    await tester.pumpWidget(MaterialApp(
+        navigatorKey: navigator,
+        localizationsDelegates: const [AppLocalizations.delegate],
+        home: ChangeNotifierProvider.value(
+            value: controller,
+            child: ValueListenableBuilder<bool>(
+                valueListenable: active,
+                builder: (_, value, __) => ReelsScreen(
+                    isActive: value,
+                    playerBuilder: (_, video, session) => Probe(
+                        key: ValueKey(video.path),
+                        path: video.path,
+                        onChange: (delta) {
+                          livePlayers += delta;
+                          if (livePlayers > peakPlayers) {
+                            peakPlayers = livePlayers;
+                          }
+                        }))))));
     await tester.pumpAndSettle();
     expect(livePlayers, 1);
     expect(find.text(videos[1].path), findsOneWidget);
@@ -53,13 +90,16 @@ void main() {
     expect(controller.isPaused, isTrue);
     expect(controller.isMuted, isTrue);
     expect(controller.playbackSpeed, 1.5);
-    navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('other route'))));
+    navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('other route'))));
     await tester.pumpAndSettle();
     expect(livePlayers, 0);
-    navigator.currentState!.pushReplacement(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('replacement route'))));
+    navigator.currentState!.pushReplacement(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('replacement route'))));
     await tester.pumpAndSettle();
     expect(livePlayers, 0);
-    controller.selectVideo(videos[2].path, const Duration(seconds: 99), 1.25, false);
+    controller.selectVideo(
+        videos[2].path, const Duration(seconds: 99), 1.25, false);
     await tester.pump();
     navigator.currentState!.pop();
     await tester.pumpAndSettle();

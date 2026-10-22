@@ -94,7 +94,8 @@ mixin BrightnessManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
     state.showBrightnessIndicator = true;
     notifyListeners();
 
-    schedulePlaybackTask('brightness-feedback', const Duration(milliseconds: 800), () {
+    schedulePlaybackTask(
+        'brightness-feedback', const Duration(milliseconds: 800), () {
       state.showBrightnessIndicator = false;
       notifyListeners();
     });

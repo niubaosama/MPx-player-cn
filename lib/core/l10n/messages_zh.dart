@@ -5,7 +5,8 @@ const Map<String, String> zhMessages = {
   "Saved": "已保存",
   "Unable to save settings": "无法保存设置",
   "Startup screen": "启动界面",
-  "Android may still show its system launch screen briefly.": "安卓系统自身的启动画面仍可能短暂显示。",
+  "Android may still show its system launch screen briefly.":
+      "安卓系统自身的启动画面仍可能短暂显示。",
   "Startup subtitle": "启动页副标题",
   "Startup title": "启动页标题",
   "Animated logo": "动态图标",
@@ -85,33 +86,43 @@ const Map<String, String> zhMessages = {
   'Queue URLs and manage active downloads': '添加链接并管理下载任务',
   'Downloader settings': '下载设置',
   'Quality, cookies, updates, and diagnostics': '画质、Cookie、更新与诊断',
-  'All files access granted. Restart the app if files still don\'t appear.': '已授予所有文件访问权限。如果文件仍未显示，请重启应用。',
+  'All files access granted. Restart the app if files still don\'t appear.':
+      '已授予所有文件访问权限。如果文件仍未显示，请重启应用。',
   'Permission not granted. Some features may be limited.': '未获得权限，部分功能可能受限。',
-  'Control how MPx accesses files on your device. Required for full file browsing.': '管理 MPx 对设备文件的访问权限。浏览全部文件需要此权限。',
+  'Control how MPx accesses files on your device. Required for full file browsing.':
+      '管理 MPx 对设备文件的访问权限。浏览全部文件需要此权限。',
   'All files access': '所有文件访问权限',
   'Granted - MPx can access all files': '已授权，可访问所有文件',
   'Not granted - File browsing is limited. Tap to enable.': '未授权，文件浏览受限。点击开启。',
   'Enable': '开启',
-  'Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.': '三星安全文件夹：其中的文件与外部存储相互隔离。MPx 只能访问同一安全文件夹空间内的文件。要访问主存储中的文件，请在安全文件夹外安装 MPx，或将文件复制到安全文件夹中。',
+  'Samsung Secure Folder: Files inside Secure Folder are isolated. MPx can only access files within the same Secure Folder profile. To access main storage files, install MPx outside Secure Folder or copy files into Secure Folder.':
+      '三星安全文件夹：其中的文件与外部存储相互隔离。MPx 只能访问同一安全文件夹空间内的文件。要访问主存储中的文件，请在安全文件夹外安装 MPx，或将文件复制到安全文件夹中。',
   'Use expert engine settings': '使用高级引擎设置',
-  'When enabled, custom mpv engine values override the simple engine profile.': '启用后，自定义 mpv 参数将覆盖简易引擎预设。',
-  'Expert mode is active. The engine profile is ignored until expert mode is turned off.': '高级模式已启用，关闭后才会重新使用简易引擎预设。',
-  'Simple engine profile remains active. Expert values are stored as a draft until you enable them.': '当前使用简易引擎预设。高级参数会保留，启用后生效。',
+  'When enabled, custom mpv engine values override the simple engine profile.':
+      '启用后，自定义 mpv 参数将覆盖简易引擎预设。',
+  'Expert mode is active. The engine profile is ignored until expert mode is turned off.':
+      '高级模式已启用，关闭后才会重新使用简易引擎预设。',
+  'Simple engine profile remains active. Expert values are stored as a draft until you enable them.':
+      '当前使用简易引擎预设。高级参数会保留，启用后生效。',
   'Start from a preset': '从预设开始',
-  'Use a tested profile to prefill the expert fields, then fine-tune safely.': '先用预设填入高级参数，再按需调整。',
+  'Use a tested profile to prefill the expert fields, then fine-tune safely.':
+      '先用预设填入高级参数，再按需调整。',
   'Base': '基础预设',
   'Threads': '线程',
   'Sync': '同步',
   'Drop': '丢帧',
   'Decoder and sync': '解码与同步',
-  'Control hardware decode, threads, frame dropping, and timing.': '调整硬件解码、线程、丢帧及音画同步。',
+  'Control hardware decode, threads, frame dropping, and timing.':
+      '调整硬件解码、线程、丢帧及音画同步。',
   'Hardware decode': '硬件解码',
   'Frame dropping': '丢帧方式',
   'Video sync': '视频同步',
   'Decoder threads': '解码线程数',
-  'Higher values help heavy files but use more CPU.': '增加线程可帮助处理大文件，但会提高 CPU 占用。',
+  'Higher values help heavy files but use more CPU.':
+      '增加线程可帮助处理大文件，但会提高 CPU 占用。',
   'Quality and rendering': '画质与渲染',
-  'Tune scaling, interpolation, deinterlacing, and GPU behavior.': '调整缩放、插帧、去隔行及 GPU 行为。',
+  'Tune scaling, interpolation, deinterlacing, and GPU behavior.':
+      '调整缩放、插帧、去隔行及 GPU 行为。',
   'Scaler': '放大算法',
   'Downscaler': '缩小算法',
   'Deinterlace': '去隔行',
@@ -121,12 +132,15 @@ const Map<String, String> zhMessages = {
   'Smooth motion but heavier GPU usage.': '让运动画面更流畅，但会增加 GPU 负载。',
   'Temporal scaler': '时间插值算法',
   'Cache and seeking': '缓存与定位',
-  'Adjust buffering and seek behavior for local or online playback.': '调整本地或网络播放的缓存与跳转方式。',
+  'Adjust buffering and seek behavior for local or online playback.':
+      '调整本地或网络播放的缓存与跳转方式。',
   'Optimize for local files': '优化本地文件播放',
-  'Prefer local-file seek behavior over network buffering.': '优先优化本地定位，减少网络缓冲相关行为。',
+  'Prefer local-file seek behavior over network buffering.':
+      '优先优化本地定位，减少网络缓冲相关行为。',
   'Cache mode': '缓存模式',
   'Cache seconds': '缓存时长（秒）',
-  'Larger cache helps unstable playback but uses more memory.': '增大缓存有助于改善卡顿，但会占用更多内存。',
+  'Larger cache helps unstable playback but uses more memory.':
+      '增大缓存有助于改善卡顿，但会占用更多内存。',
   'Cache back': '回看缓存',
   'Demuxer max': '解复用缓存上限',
   'Back buffer': '后向缓存',
@@ -134,7 +148,8 @@ const Map<String, String> zhMessages = {
   'Fast seek': '快速定位',
   'Seek framedrop': '定位时丢帧',
   'Compatibility': '兼容性',
-  'Use these when a device decoder is unstable or broken.': '设备解码不稳定或异常时可调整这些选项。',
+  'Use these when a device decoder is unstable or broken.':
+      '设备解码不稳定或异常时可调整这些选项。',
   'Fast decoding': '快速解码',
   'HW codecs': '硬解编码格式',
   'Settings': '设置',
@@ -153,7 +168,8 @@ const Map<String, String> zhMessages = {
   'Folder imported to Reels!': '已将文件夹导入短视频！',
   'Tap back to return': '返回上一级',
   'No Reels yet!': '暂无短视频',
-  'Navigate to a folder in Home and tap the import button, or add videos via the video details sheet.': '在首页进入文件夹后点击导入按钮，或通过视频详情添加。',
+  'Navigate to a folder in Home and tap the import button, or add videos via the video details sheet.':
+      '在首页进入文件夹后点击导入按钮，或通过视频详情添加。',
   'Or add/delete your own videos externally at:': '也可以在以下目录中自行添加或删除视频：',
   'Import Current Folder': '导入当前文件夹',
   'Newest First': '最新优先',
@@ -195,7 +211,8 @@ const Map<String, String> zhMessages = {
   'Prevent accidental touches while watching': '防止观看时误触',
   'Locked': '已锁定',
   'Unlocked': '未锁定',
-  'Tip: tap the center of the video to show or hide controls.': '提示：点击视频中央可显示或隐藏控制按钮。',
+  'Tip: tap the center of the video to show or hide controls.':
+      '提示：点击视频中央可显示或隐藏控制按钮。',
   'Volume': '音量',
   'Playback Speed': '播放速度',
   'Normal': '正常',
@@ -205,7 +222,8 @@ const Map<String, String> zhMessages = {
   'Drag Sensitivity': '拖动灵敏度',
   'Semi-bold': '半粗体',
   'Subtitle Settings': '字幕设置',
-  'Choose a subtitle track and tune how captions look on screen.': '选择字幕轨道并调整字幕显示样式。',
+  'Choose a subtitle track and tune how captions look on screen.':
+      '选择字幕轨道并调整字幕显示样式。',
   'Track': '轨道',
   'No subtitle tracks found for this video': '此视频未找到字幕轨道',
   'Subtitle track': '字幕轨道',
@@ -231,8 +249,10 @@ const Map<String, String> zhMessages = {
   'This is a subtitle preview': '这是一段字幕预览',
   'Enable Subtitles': '启用字幕',
   'Subtitles will auto-detect': '自动检测字幕',
-  'Cannot import root directory. Please navigate to a specific folder.': '无法导入根目录，请先进入具体文件夹。',
-  'Please navigate to a specific folder to play as Reels.': '请先进入具体文件夹，再以短视频模式播放。',
+  'Cannot import root directory. Please navigate to a specific folder.':
+      '无法导入根目录，请先进入具体文件夹。',
+  'Please navigate to a specific folder to play as Reels.':
+      '请先进入具体文件夹，再以短视频模式播放。',
   'Delete Selected': '删除所选项目',
   'Cancel': '取消',
   'Delete': '删除',
@@ -312,13 +332,17 @@ const Map<String, String> zhMessages = {
   'Download folder': '下载文件夹',
   'Change': '更改',
   'Cookies file': 'Cookie 文件',
-  'Not imported. Import cookies for Instagram or age-restricted content.': '尚未导入。访问 Instagram 或有年龄限制的内容可能需要 Cookie。',
+  'Not imported. Import cookies for Instagram or age-restricted content.':
+      '尚未导入。访问 Instagram 或有年龄限制的内容可能需要 Cookie。',
   'Import': '导入',
   'Instagram cookies help': 'Instagram Cookie 帮助',
-  'If Instagram says to import cookies, export a Netscape-format cookies.txt file from a browser where you are already logged in to Instagram, then tap Import above.': '如果 Instagram 提示导入 Cookie，请在已登录 Instagram 的浏览器中导出 Netscape 格式的 cookies.txt，然后点击上方“导入”。',
-  'Quick path: log into Instagram in Firefox or Kiwi Browser -> use a cookie-export extension -> save cookies.txt -> import it here.': '操作步骤：在 Firefox 或 Kiwi 浏览器中登录 Instagram → 使用 Cookie 导出扩展 → 保存 cookies.txt → 在此导入。',
+  'If Instagram says to import cookies, export a Netscape-format cookies.txt file from a browser where you are already logged in to Instagram, then tap Import above.':
+      '如果 Instagram 提示导入 Cookie，请在已登录 Instagram 的浏览器中导出 Netscape 格式的 cookies.txt，然后点击上方“导入”。',
+  'Quick path: log into Instagram in Firefox or Kiwi Browser -> use a cookie-export extension -> save cookies.txt -> import it here.':
+      '操作步骤：在 Firefox 或 Kiwi 浏览器中登录 Instagram → 使用 Cookie 导出扩展 → 保存 cookies.txt → 在此导入。',
   'Share behavior': '分享链接处理方式',
-  'Shared links open a small approval window with quality choices and then show a progress notification instead of opening the full app.': '分享的链接会先打开画质选择窗口，确认后通过通知显示下载进度，无需打开完整应用。',
+  'Shared links open a small approval window with quality choices and then show a progress notification instead of opening the full app.':
+      '分享的链接会先打开画质选择窗口，确认后通过通知显示下载进度，无需打开完整应用。',
   'yt-dlp engine': 'yt-dlp 引擎',
   'Latest known version': '最新已知版本',
   'Engine status': '引擎状态',
@@ -329,7 +353,8 @@ const Map<String, String> zhMessages = {
   'Update downloader engine': '更新下载引擎',
   'Shared link queued for download.': '分享链接已加入下载队列。',
   'Add Download': '添加下载',
-  'Paste a supported video URL to preview metadata and choose quality before starting the download.': '粘贴支持的视频链接，预览信息并选择画质后开始下载。',
+  'Paste a supported video URL to preview metadata and choose quality before starting the download.':
+      '粘贴支持的视频链接，预览信息并选择画质后开始下载。',
   'Active': '进行中',
   'Completed': '已完成',
   'No active downloads': '暂无下载任务',
@@ -370,7 +395,8 @@ const Map<String, String> zhMessages = {
   'Home': '首页',
   'Reels': '短视频',
   'Storage Access Required': '需要存储访问权限',
-  'MPx Player needs access to your videos to play them.': 'MPx Player 需要访问视频文件才能播放。',
+  'MPx Player needs access to your videos to play them.':
+      'MPx Player 需要访问视频文件才能播放。',
   'Grant Access': '授予权限',
   'Open Settings': '打开设置',
   'Failed to import folder: {value0}': '导入文件夹失败：{value0}',
@@ -385,7 +411,8 @@ const Map<String, String> zhMessages = {
   'Subtitle loaded: {value0}': '已加载字幕：{value0}',
   'Failed to load subtitle: {value0}': '加载字幕失败：{value0}',
   '{value0} subtitle track{value1} available': '有 {value0} 条字幕轨道',
-  'Are you sure you want to delete {value0} items? This cannot be undone.': '确定删除这 {value0} 个项目吗？此操作无法撤销。',
+  'Are you sure you want to delete {value0} items? This cannot be undone.':
+      '确定删除这 {value0} 个项目吗？此操作无法撤销。',
   '{value0} result{value1}': '{value0} 个结果',
   'Failed to add to Reels: {value0}': '添加到短视频失败：{value0}',
   '{value0}d ago': '{value0} 天前',
@@ -405,7 +432,8 @@ const Map<String, String> zhMessages = {
   '{value0}h ago': '{value0} 小时前',
   'Language': '语言',
   'Follow system': '跟随系统',
-  'Choose the app language. Changes take effect immediately.': '选择应用语言，切换后立即生效。',
+  'Choose the app language. Changes take effect immediately.':
+      '选择应用语言，切换后立即生效。',
   'Audio only': '仅音频',
   'Just now': '刚刚',
   'Yesterday': '昨天',
@@ -417,7 +445,8 @@ const Map<String, String> zhMessages = {
   '{count} years ago': '{count} 年前',
   'Close': '关闭',
   'Reels sources': '短视频来源',
-  'Videos stay in their original folders. No files are copied.': '视频保留在原文件夹中，不会复制文件。',
+  'Videos stay in their original folders. No files are copied.':
+      '视频保留在原文件夹中，不会复制文件。',
   'No sources added yet': '尚未添加来源',
   'Remove source': '移除来源',
   'Include subfolders': '包含子文件夹',
@@ -425,7 +454,8 @@ const Map<String, String> zhMessages = {
   'Add folder': '添加文件夹',
   'Removing a source keeps all original videos.': '移除来源不会删除原视频。',
   'Manage sources': '管理来源',
-  'Add one or more folders, or add a video from its details. No files are copied.': '添加一个或多个文件夹，也可从视频详情添加单个视频。不会复制文件。',
+  'Add one or more folders, or add a video from its details. No files are copied.':
+      '添加一个或多个文件夹，也可从视频详情添加单个视频。不会复制文件。',
   'Folder added to Reels. No videos were copied.': '已添加文件夹，视频保持原位。',
   'Failed to add folder: {value0}': '添加文件夹失败：{value0}',
   'Add current folder to Reels': '将当前文件夹添加到短视频',

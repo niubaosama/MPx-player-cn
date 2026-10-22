@@ -159,9 +159,6 @@ class AppDatabase
           duration_ms INTEGER NOT NULL DEFAULT 0,
           last_played_at INTEGER NOT NULL,
           completion_percent INTEGER NOT NULL DEFAULT 0,
-        subtitle_paths TEXT DEFAULT "",
-        selected_subtitle_track TEXT DEFAULT "",
-        selected_audio_track TEXT DEFAULT "",
           FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
         )
       ''');

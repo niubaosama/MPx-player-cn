@@ -62,7 +62,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
   @override
   void dispose() { WidgetsBinding.instance.removeObserver(this); _pages?.dispose(); super.dispose(); }
   PlaybackTransfer? _transfer(ReelsController controller) => controller.currentVideo == null ? null :
-    PlaybackTransfer(videos: controller.reelsVideos, index: controller.currentIndex,
+    PlaybackTransfer(videos: List.of(controller.reelsVideos), index: controller.currentIndex,
       position: controller.positionFor(controller.currentVideo!.path),
       speed: controller.playbackSpeed, paused: controller.isPaused);
   Future<void> _openNormal(ReelsController controller) async {

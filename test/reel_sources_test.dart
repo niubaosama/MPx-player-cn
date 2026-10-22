@@ -18,7 +18,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     root = await Directory.systemTemp.createTemp('mpx_sources_');
     index = LibraryIndexService.forTesting(MemoryIndexDatabase());
-    service = ReelService.forTesting(index, () async => Directory(p.join(root.path, 'app')));
+    service = ReelService.forTesting(
+        index, () async => Directory(p.join(root.path, 'app')));
   });
   tearDown(() async {
     index.dispose();
@@ -35,10 +36,13 @@ void main() {
     final publicRoot = p.join(root.path, 'profile');
     final first = await video('profile/Movies/a.mp4', 'first');
     final second = await video('profile/DCIM/sub/b.mp4', 'second');
-    final localService = ReelService.forTesting(index, () async =>
-      Directory(p.join(publicRoot, 'Android', 'data', 'com.example.mpx', 'files')));
+    final localService = ReelService.forTesting(
+        index,
+        () async => Directory(
+            p.join(publicRoot, 'Android', 'data', 'com.example.mpx', 'files')));
     final videos = await localService.getLocalVideos();
-    expect(videos.map((v) => v.path), unorderedEquals([first.path, second.path]));
+    expect(
+        videos.map((v) => v.path), unorderedEquals([first.path, second.path]));
     expect(await Directory(p.join(publicRoot, 'Android')).exists(), isFalse);
     expect(await first.readAsString(), 'first');
     expect(await second.readAsString(), 'second');
@@ -50,13 +54,16 @@ void main() {
     await service.importFolder(first.parent.path);
     await service.importFolder(second.parent.path);
     final videos = await service.getReelsVideos();
-    expect(videos.map((v) => v.path), unorderedEquals([first.path, second.path]));
+    expect(
+        videos.map((v) => v.path), unorderedEquals([first.path, second.path]));
     expect(videos.map((v) => v.id).toSet().length, 2);
     expect(await first.readAsString(), 'first');
     expect(await second.readAsString(), 'second');
-    final files = await root.list(recursive: true).where((e) => e is File).toList();
+    final files =
+        await root.list(recursive: true).where((e) => e is File).toList();
     expect(files.length, 2);
-    expect(await Directory(p.join(root.path, 'app', 'mpxReels')).exists(), isFalse);
+    expect(await Directory(p.join(root.path, 'app', 'mpxReels')).exists(),
+        isFalse);
   });
 
   test('父子来源和单文件来源重叠时按路径去重', () async {
@@ -85,20 +92,26 @@ void main() {
   test('来源持久化且并发添加不丢失，重复添加不产生副本', () async {
     final first = await video('one/a.mp4');
     final second = await video('two/b.mp4');
-    await Future.wait([service.importFolder(first.parent.path), service.importFolder(second.parent.path)]);
+    await Future.wait([
+      service.importFolder(first.parent.path),
+      service.importFolder(second.parent.path)
+    ]);
     await service.importFolder(first.parent.path);
-    final restored = ReelService.forTesting(index, () async => Directory(p.join(root.path, 'app')));
+    final restored = ReelService.forTesting(
+        index, () async => Directory(p.join(root.path, 'app')));
     expect((await restored.getSources()).map((s) => s.path),
         unorderedEquals([first.parent.path, second.parent.path]));
   });
 
   test('旧公共目录和应用目录均接续读取，移除后不再次自动添加', () async {
     final app = Directory(p.join(root.path, 'Android', 'data', 'mpx', 'files'));
-    final oldApp = await video(p.join(p.relative(app.path, from: root.path), 'mpxReels', 'old.mp4'));
+    final oldApp = await video(
+        p.join(p.relative(app.path, from: root.path), 'mpxReels', 'old.mp4'));
     final oldPublic = await video('Movies/mpxReels/old.mp4');
     final legacy = ReelService.forTesting(index, () async => app);
     final sources = await legacy.getSources();
-    expect(sources.map((s) => s.path), unorderedEquals([oldApp.parent.path, oldPublic.parent.path]));
+    expect(sources.map((s) => s.path),
+        unorderedEquals([oldApp.parent.path, oldPublic.parent.path]));
     expect((await legacy.getReelsVideos()).length, 2);
     await legacy.removeSource(oldPublic.parent.path);
     final reopened = ReelService.forTesting(index, () async => app);
@@ -117,7 +130,8 @@ void main() {
   });
 
   test('无效路径报错，不记录伪来源、不创建目录', () async {
-    await expectLater(service.importFolder(p.join(root.path, 'missing')), throwsA(isA<FileSystemException>()));
+    await expectLater(service.importFolder(p.join(root.path, 'missing')),
+        throwsA(isA<FileSystemException>()));
     expect(await service.getSources(), isEmpty);
     expect(await Directory(p.join(root.path, 'missing')).exists(), isFalse);
   });

@@ -115,7 +115,8 @@ mixin VolumeManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
     state.showVolumeIndicator = true;
     notifyListeners();
 
-    schedulePlaybackTask('volume-feedback', const Duration(milliseconds: 800), () {
+    schedulePlaybackTask('volume-feedback', const Duration(milliseconds: 800),
+        () {
       state.showVolumeIndicator = false;
       notifyListeners();
     });

@@ -185,7 +185,9 @@ class ThumbnailDiskCache {
   }
 
   Future<void> cleanup() {
-    return _cleanupFuture ??= _cleanup().whenComplete(() { _cleanupFuture = null; });
+    return _cleanupFuture ??= _cleanup().whenComplete(() {
+      _cleanupFuture = null;
+    });
   }
 
   Future<void> _cleanup() async {
