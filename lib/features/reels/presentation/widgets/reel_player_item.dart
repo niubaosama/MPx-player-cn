@@ -37,7 +37,7 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
     _controller = PlayerController(_repository);
     _controller.addListener(_rememberPosition);
     _controller.trackPlaybackSubscription(_repository.player.stream.error.listen((error) {
-      if (mounted && error.isNotEmpty) setState(() { => _error = error); }
+      if (mounted && error.isNotEmpty) { setState(() => _error = error); }
     }));
     _initialize();
   }
@@ -59,7 +59,7 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
       await _syncPlayback();
       if (mounted) setState(() {});
     } catch (e) {
-      if (mounted) setState(() { => _error = e.toString()); }
+      if (mounted) { setState(() => _error = e.toString()); }
     }
   }
   Future<void> _syncPlayback() async {

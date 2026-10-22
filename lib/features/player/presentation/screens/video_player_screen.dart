@@ -467,7 +467,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     setState(() => _overlayMessage = message);
     _messageTimer?.cancel();
     _messageTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) setState(() { => _overlayMessage = null); }
+      if (mounted) { setState(() => _overlayMessage = null); }
     });
   }
 

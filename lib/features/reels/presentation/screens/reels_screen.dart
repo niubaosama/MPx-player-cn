@@ -48,7 +48,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
   void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (mounted) setState(() { => _appActive = state == AppLifecycleState.resumed); }
+    if (mounted) { setState(() => _appActive = state == AppLifecycleState.resumed); }
   }
   @override
   void dispose() { WidgetsBinding.instance.removeObserver(this); _pages?.dispose(); super.dispose(); }
@@ -78,7 +78,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true,
       builder: (_) => ConstrainedBox(constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .85),
         child: ReelSourcesSheet(controller: controller)));
-    if (mounted) setState(() { => _routeCovered = false); }
+    if (mounted) { setState(() => _routeCovered = false); }
   }
   @override
   Widget build(BuildContext context) {

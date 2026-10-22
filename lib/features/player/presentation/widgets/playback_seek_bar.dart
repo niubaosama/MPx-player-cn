@@ -32,7 +32,7 @@ class _PlaybackSeekBarState extends State<PlaybackSeekBar> {
         } : null,
         onChangeEnd: widget.duration > Duration.zero ? (value) {
           widget.onSeekEnd(value);
-          if (mounted) setState(() { => _preview = null); }
+          if (mounted) { setState(() => _preview = null); }
         } : null),
     ));
   }
