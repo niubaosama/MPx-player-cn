@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: 配置 Java 17
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
@@ -47,6 +48,27 @@ jobs:
       - name: 获取项目依赖
         run: flutter pub get
 
+      - name: 格式化本轮修改并保存审查副本
+        run: |
+          git diff --name-only 0c0602b4d62892fffd4e0fc3546a2240015ee1f9 HEAD -- '*.dart' > "$RUNNER_TEMP/mpx-dart-files.txt"
+          python - <<'PY'
+          import os, pathlib, subprocess, zipfile
+          paths = pathlib.Path(os.environ['RUNNER_TEMP'], 'mpx-dart-files.txt').read_text().splitlines()
+          paths = [p for p in paths if pathlib.Path(p).is_file()]
+          if paths:
+              subprocess.run(['dart', 'format', *paths], check=True)
+          with zipfile.ZipFile('formatted-source.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+              for path in paths:
+                  archive.write(path, path)
+          PY
+
+      - name: 保存格式化源码
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: MPx-cn-formatted-source
+          path: formatted-source.zip
+          retention-days: 3
+
       - name: 静态分析
         # 原项目已有未使用字段和旧 API 警告，保留提示，编译错误仍会阻止构建。
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
@@ -55,26 +77,32 @@ jobs:
         timeout-minutes: 5
         run: flutter test test/localization_test.dart test/library_index_test.dart test/reel_sources_test.dart test/reel_sources_sheet_test.dart test/directory_browser_test.dart
 
-      # 分批修改期间保留原有全量回归失败记录；交付 APK 时必须全部通过。
-      - name: 全量回归（记录后续批次待修复项）
+      - name: 全量回归
         timeout-minutes: 5
-        continue-on-error: ${{ github.event_name != 'workflow_dispatch' && !contains(github.event.head_commit.message, '[build-apk]') }}
         run: flutter test
 
       - name: 检查下载模块的汉化
         run: python -B -m unittest discover -s test -p 'downloader_localization_test.py' -v
 
-      # 沿用原项目的测试签名，仅供首轮安装验证，后续长期版本需配置固定私有签名。
+      # 云端先生成构建产物，下载后使用仅保存在本机的固定私有密钥签名。
       # 分批修改先运行检查；最终提交带 [build-apk] 时生成安装包。
       - name: 编译 ARM64 测试包
         if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-apk]')
         run: flutter build apk --release --target-platform android-arm64
+
+      - name: 保存本机签名所需的官方工具
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-apk]')
+        run: |
+          mkdir -p build/signing-tools
+          cp "$(find "$ANDROID_HOME/build-tools" -path '*/lib/apksigner.jar' | sort -V | tail -n 1)" build/signing-tools/apksigner.jar
 
       - name: 保存 APK
         if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-apk]')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: MPx-player-cn-arm64-test
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/signing-tools/apksigner.jar
           if-no-files-found: error
           retention-days: 7

@@ -144,13 +144,26 @@ void main() {
       await audioTracksController.close();
       await subtitleTracksController.close();
 
-      // Disable wakelock before dispose to avoid platform channel issues
-      // Then dispose
-      try {
-        controller.dispose();
-      } catch (e) {
-        // Ignore wakelock errors during cleanup
-      }
+      if (!controller.playbackDisposed) controller.dispose();
+    });
+
+    test('dispose cancels streams and all feedback callbacks', () async {
+      controller.showSeekFeedback('forward');
+      controller.showDoubleTapSeekFeedback('back');
+      controller.volumeUp();
+      controller.brightnessUp();
+      controller.startHideTimer();
+      controller.dispose();
+      expect(playingController.hasListener, isFalse);
+      expect(positionController.hasListener, isFalse);
+      expect(audioTracksController.hasListener, isFalse);
+      clearInteractions(mockRepository);
+      playingController.add(true);
+      positionController.add(const Duration(seconds: 20));
+      audioTracksController.add(null);
+      await Future<void>.delayed(const Duration(milliseconds: 850));
+      verifyNever(mockRepository.getAudioTracks());
+      expect(controller.playbackDisposed, isTrue);
     });
 
     group('Initial State', () {
