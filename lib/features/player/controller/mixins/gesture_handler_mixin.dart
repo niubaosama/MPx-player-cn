@@ -57,6 +57,8 @@ mixin GestureHandlerMixin on ChangeNotifier {
 
   int _lastHorizontalDragNotifyMs = 0;
   int _lastVerticalDragNotifyMs = 0;
+  double _verticalDragDistance = 0;
+  bool _verticalDragActivated = false;
 
   void onHorizontalDragStart(double startX) {
     state.dragStartX = startX;
@@ -118,17 +120,21 @@ mixin GestureHandlerMixin on ChangeNotifier {
       _coordOnVolumeAdjustStart();
     }
 
+    _verticalDragDistance = 0;
+    _verticalDragActivated = false;
     state.isDraggingY = true;
     state.verticalDragSide = side;
-    if (side == 'left') {
-      state.showBrightnessIndicator = true;
-    } else {
-      state.showVolumeIndicator = true;
-    }
     notifyListeners();
   }
 
   void onVerticalDragUpdate(double delta) {
+    if (!state.isDraggingY) return;
+    if (!_verticalDragActivated) {
+      _verticalDragDistance += delta;
+      if (_verticalDragDistance.abs() < 24) return;
+      _verticalDragActivated = true;
+      delta = _verticalDragDistance.sign * (_verticalDragDistance.abs() - 24);
+    }
     if (state.verticalDragSide == 'left') {
       // Delegate to BrightnessManagerMixin
       adjustBrightnessByDrag(delta);

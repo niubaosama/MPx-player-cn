@@ -130,7 +130,8 @@ void main() {
       when(mockRepository.getSubtitleTracks()).thenReturn(const []);
 
       controller = PlayerController(mockRepository);
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await controller.initialized;
+      clearInteractions(mockRepository);
     });
 
     tearDown(() async {

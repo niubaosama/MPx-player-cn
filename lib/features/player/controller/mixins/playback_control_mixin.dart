@@ -1,16 +1,19 @@
+import 'player_lifetime_mixin.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
 import '../../../history/services/history_service.dart';
 import '../../../library/domain/entities/video_file.dart';
 import '../../domain/repositories/player_repository.dart';
 import '../player_state.dart';
 
-mixin PlaybackControlMixin on ChangeNotifier {
+mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
   PlayerRepository get repository;
   PlayerState get state;
 
   Future<void> loadVideo(String path) async {
     await repository.load(path);
+    if (playbackDisposed) return;
     await repository.setVolume(state.volume);
+    if (playbackDisposed) return;
   }
 
   void togglePlayPause() {
@@ -165,12 +168,13 @@ mixin PlaybackControlMixin on ChangeNotifier {
 
   void cancelHideTimer() {
     state.hideControlsRequestId++;
+    cancelPlaybackTask('hide-controls');
   }
 
   void startHideTimer() {
     final requestId = ++state.hideControlsRequestId;
 
-    Future.delayed(const Duration(seconds: 4), () {
+    schedulePlaybackTask('hide-controls', const Duration(seconds: 4), () {
       if (requestId != state.hideControlsRequestId) return;
 
       if (state.showControls &&
@@ -191,7 +195,7 @@ mixin PlaybackControlMixin on ChangeNotifier {
     state.showSeekIndicator = true;
     state.seekDirection = direction;
     notifyListeners();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    schedulePlaybackTask('seek-feedback', const Duration(milliseconds: 500), () {
       state.showSeekIndicator = false;
       notifyListeners();
     });
@@ -205,7 +209,7 @@ mixin PlaybackControlMixin on ChangeNotifier {
     }
     notifyListeners();
 
-    Future.delayed(const Duration(milliseconds: 400), () {
+    schedulePlaybackTask('double-tap-feedback', const Duration(milliseconds: 400), () {
       state.showDoubleTapSeekLeft = false;
       state.showDoubleTapSeekRight = false;
       notifyListeners();
@@ -285,6 +289,7 @@ mixin PlaybackControlMixin on ChangeNotifier {
     state.audioTracks = tracks;
     if (tracks.isNotEmpty && video != null) {
       final savedTrack = await HistoryService.getSelectedAudioTrack(video.id);
+    if (playbackDisposed) return;
       if (savedTrack != null && savedTrack.isNotEmpty) {
         final idx = tracks.indexWhere((t) {
           final title = t.title?.trim();
@@ -319,6 +324,7 @@ mixin PlaybackControlMixin on ChangeNotifier {
               ? lang.toUpperCase()
               : 'Track ${index + 1}';
       await HistoryService.saveSelectedAudioTrack(video.id, label);
+    if (playbackDisposed) return;
     }
     notifyListeners();
   }

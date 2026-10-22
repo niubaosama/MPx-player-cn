@@ -1,3 +1,4 @@
+import 'player_lifetime_mixin.dart';
 import 'package:flutter/material.dart';
 import '../../../settings/services/system_volume_service.dart';
 import '../../domain/repositories/player_repository.dart';
@@ -9,7 +10,7 @@ import '../player_state.dart';
 /// Volume is synced with the system volume.
 ///
 /// This mixin provides the `adjustVolumeByDrag` method required by GestureHandlerMixin.
-mixin VolumeManagerMixin on ChangeNotifier {
+mixin VolumeManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
   PlayerRepository get repository;
   PlayerState get state;
 
@@ -19,7 +20,7 @@ mixin VolumeManagerMixin on ChangeNotifier {
   int _lastVolumeDragNotifyMs = 0;
 
   void adjustVolumeByDrag(double delta) {
-    final volumeUpdate = -delta / 200;
+    final volumeUpdate = -delta / 600;
     final newVolume = (state.volume + volumeUpdate * 100).clamp(0.0, 100.0);
     state.volume = newVolume;
     repository.setVolume(newVolume);
@@ -43,12 +44,11 @@ mixin VolumeManagerMixin on ChangeNotifier {
   /// Loads the current system volume and applies it to the player.
   Future<void> initializeVolume() async {
     await SystemVolumeService.init();
+    if (playbackDisposed) return;
     final systemVolume = SystemVolumeService.volume * 100;
     state.volume = systemVolume;
     repository.setVolume(systemVolume);
-    try {
-      notifyListeners();
-    } catch (_) {}
+    notifyListeners();
   }
 
   /// Sets the volume level and updates system volume.
@@ -115,11 +115,9 @@ mixin VolumeManagerMixin on ChangeNotifier {
     state.showVolumeIndicator = true;
     notifyListeners();
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    schedulePlaybackTask('volume-feedback', const Duration(milliseconds: 800), () {
       state.showVolumeIndicator = false;
-      try {
-        notifyListeners();
-      } catch (_) {}
+      notifyListeners();
     });
   }
 

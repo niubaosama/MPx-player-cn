@@ -1,3 +1,4 @@
+import 'player_lifetime_mixin.dart';
 import 'package:flutter/material.dart';
 import '../../../history/services/history_service.dart';
 import '../../../library/domain/entities/video_file.dart';
@@ -6,7 +7,7 @@ import '../../domain/repositories/player_repository.dart';
 import '../player_state.dart';
 
 /// Mixin for managing subtitle settings and state.
-mixin SubtitleManagerMixin on ChangeNotifier {
+mixin SubtitleManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
   PlayerRepository get repository;
   PlayerState get state;
 
@@ -103,6 +104,7 @@ mixin SubtitleManagerMixin on ChangeNotifier {
     } else if (video != null) {
       final savedTrack =
           await HistoryService.getSelectedSubtitleTrack(video.id);
+    if (playbackDisposed) return;
       if (savedTrack != null && savedTrack.isNotEmpty) {
         final idx = tracks.indexWhere((t) {
           final title = t.title?.trim();
@@ -118,6 +120,7 @@ mixin SubtitleManagerMixin on ChangeNotifier {
           state.currentSubtitleTrackIndex = idx;
           state.subtitlesEnabled = true;
           await repository.setSubtitleTrack(idx);
+    if (playbackDisposed) return;
         }
       } else if (state.currentSubtitleTrackIndex >= tracks.length) {
         state.currentSubtitleTrackIndex = 0;
@@ -151,20 +154,24 @@ mixin SubtitleManagerMixin on ChangeNotifier {
               ? lang.toUpperCase()
               : 'Subtitle ${index + 1}';
       await HistoryService.saveSelectedSubtitleTrack(video.id, label);
+    if (playbackDisposed) return;
     }
     notifyListeners();
   }
 
   Future<void> loadExternalSubtitle(String path, {VideoFile? video}) async {
     await repository.loadExternalSubtitle(path);
+    if (playbackDisposed) return;
     loadSubtitleTracks();
     state.subtitlesEnabled = true;
     SubtitleSettingsService.setEnabled(true);
     if (video != null) {
       try {
         final existing = await HistoryService.getSubtitlePaths(video.id);
+    if (playbackDisposed) return;
         if (!existing.contains(path)) {
           await HistoryService.saveSubtitlePaths(video.id, [...existing, path]);
+    if (playbackDisposed) return;
         }
       } catch (_) {}
     }
@@ -176,8 +183,10 @@ mixin SubtitleManagerMixin on ChangeNotifier {
       if (state.currentSubtitleTrackIndex >= 0 &&
           state.currentSubtitleTrackIndex < state.subtitleTracks.length) {
         await repository.setSubtitleTrack(state.currentSubtitleTrackIndex);
+    if (playbackDisposed) return;
       } else {
         await repository.enableSubtitles();
+    if (playbackDisposed) return;
       }
     }
   }

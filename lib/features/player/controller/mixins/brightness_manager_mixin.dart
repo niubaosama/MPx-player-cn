@@ -1,3 +1,4 @@
+import 'player_lifetime_mixin.dart';
 import 'package:flutter/material.dart';
 import '../../../settings/services/system_brightness_service.dart';
 import '../../domain/repositories/player_repository.dart';
@@ -9,7 +10,7 @@ import '../player_state.dart';
 /// Brightness is synced with the system brightness.
 ///
 /// This mixin provides the `adjustBrightnessByDrag` method required by GestureHandlerMixin.
-mixin BrightnessManagerMixin on ChangeNotifier {
+mixin BrightnessManagerMixin on ChangeNotifier, PlayerLifetimeMixin {
   PlayerRepository get repository;
   PlayerState get state;
 
@@ -21,7 +22,7 @@ mixin BrightnessManagerMixin on ChangeNotifier {
 
   void adjustBrightnessByDrag(double delta) {
     // Negate delta so dragging UP increases brightness (natural gesture)
-    final brightnessUpdate = -delta / 200;
+    final brightnessUpdate = -delta / 600;
     final newBrightness =
         (state.brightnessValue + brightnessUpdate * 100).clamp(0.0, 100.0);
     state.brightnessValue = newBrightness;
@@ -42,11 +43,10 @@ mixin BrightnessManagerMixin on ChangeNotifier {
   /// Loads the current system brightness and applies it to the player.
   Future<void> initializeBrightness() async {
     await SystemBrightnessService.init();
+    if (playbackDisposed) return;
     final systemBrightness = SystemBrightnessService.brightness * 100;
     state.brightnessValue = systemBrightness;
-    try {
-      notifyListeners();
-    } catch (_) {}
+    notifyListeners();
   }
 
   /// Sets the brightness level and updates system brightness.
@@ -94,11 +94,9 @@ mixin BrightnessManagerMixin on ChangeNotifier {
     state.showBrightnessIndicator = true;
     notifyListeners();
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    schedulePlaybackTask('brightness-feedback', const Duration(milliseconds: 800), () {
       state.showBrightnessIndicator = false;
-      try {
-        notifyListeners();
-      } catch (_) {}
+      notifyListeners();
     });
   }
 

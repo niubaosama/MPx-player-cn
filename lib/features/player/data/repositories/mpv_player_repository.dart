@@ -6,6 +6,7 @@ import '../../domain/repositories/player_repository.dart';
 class MpvPlayerRepository implements PlayerRepository {
   late final Player _player;
   bool _isDisposed = false;
+  StreamSubscription<dynamic>? _trackSubscription;
   final StreamController<void> _audioTracksController =
       StreamController<void>.broadcast();
   final StreamController<void> _subtitleTracksController =
@@ -19,7 +20,7 @@ class MpvPlayerRepository implements PlayerRepository {
   }
 
   void _setupTrackListeners() {
-    _player.stream.tracks.listen((tracks) {
+    _trackSubscription = _player.stream.tracks.listen((tracks) {
       if (!_audioTracksController.isClosed) {
         _audioTracksController.add(null);
       }
@@ -36,8 +37,8 @@ class MpvPlayerRepository implements PlayerRepository {
         options: const {
           'sub-auto': 'all',
           'sub-paths': '.',
-          'demuxer-mkv-probe-all': 'yes',
-          'demuxer-max-back-bytes': '512M',
+          'demuxer-mkv-probe-all': 'no',
+          'demuxer-max-back-bytes': '64M',
         },
       );
 
@@ -270,6 +271,7 @@ class MpvPlayerRepository implements PlayerRepository {
   void dispose() {
     if (_isDisposed) return;
     _isDisposed = true;
+    _trackSubscription?.cancel();
     _audioTracksController.close();
     _subtitleTracksController.close();
     _player.dispose();

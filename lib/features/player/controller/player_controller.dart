@@ -1,3 +1,4 @@
+import 'mixins/player_lifetime_mixin.dart';
 import 'dart:async';
 import 'dart:io' as dartIo;
 import 'dart:ui' show Color, FontWeight;
@@ -34,6 +35,7 @@ export '../domain/repositories/player_repository.dart' show AudioTrackInfo;
 /// - Provides ChangeNotifier for UI updates
 class PlayerController extends ChangeNotifier
     with
+        PlayerLifetimeMixin,
         GestureCoordinatorMixin,
         GestureHandlerMixin,
         SubtitleManagerMixin,
@@ -159,6 +161,8 @@ class PlayerController extends ChangeNotifier
       VideoController((_repository as MpvPlayerRepository).player);
 
   /// Creates a PlayerController with dependency injection.
+  late final Future<void> initialized;
+
   PlayerController(this._repository) {
     // Setup gesture coordination between mixins
     setupGestureCoordination(
@@ -173,8 +177,7 @@ class PlayerController extends ChangeNotifier
     );
 
     initializeSubtitles();
-    initializeVolume();
-    initializeBrightness();
+    initialized = Future.wait<void>([initializeVolume(), initializeBrightness()]).then((_) {});
     _loadSeekSettings();
     _setupListeners();
   }
@@ -185,74 +188,75 @@ class PlayerController extends ChangeNotifier
   }
 
   void _setupListeners() {
-    _repository.playingStream.listen((playing) {
+    trackPlaybackSubscription(_repository.playingStream.listen((playing) {
       _state.isPlaying = playing;
       notifyListeners();
-    });
+    }));
 
-    _repository.positionStream.listen((pos) {
+    trackPlaybackSubscription(_repository.positionStream.listen((pos) {
       if (_state.isDraggingX) return;
 
       _state.position = pos;
       final now = DateTime.now();
-      final shouldNotify = _state.showControls ||
-          _state.showSeekIndicator ||
-          _state.showVolumeIndicator ||
-          _state.showBrightnessIndicator ||
-          _state.showDoubleTapSeekLeft ||
-          _state.showDoubleTapSeekRight ||
-          _state.controlsInteractionCount > 0 ||
-          _lastPositionUiUpdate == null ||
-          now.difference(_lastPositionUiUpdate!) >=
-              const Duration(milliseconds: 250);
+      final interval = _state.showControls ? 100 : 250;
+      final shouldNotify = _lastPositionUiUpdate == null ||
+          now.difference(_lastPositionUiUpdate!).inMilliseconds >= interval;
 
       if (shouldNotify) {
         _lastPositionUiUpdate = now;
         notifyListeners();
       }
-    });
+    }));
 
-    _repository.durationStream.listen((dur) {
+    trackPlaybackSubscription(_repository.durationStream.listen((dur) {
       _state.duration = dur;
       notifyListeners();
-    });
+    }));
 
-    _repository.bufferingStream.listen((buffering) {
+    trackPlaybackSubscription(_repository.bufferingStream.listen((buffering) {
       _state.isBuffering = buffering;
       notifyListeners();
-    });
+    }));
 
-    _repository.subtitleTracksStream.listen((_) {
+    trackPlaybackSubscription(_repository.subtitleTracksStream.listen((_) {
       loadSubtitleTracks();
-    });
+    }));
 
-    _repository.audioTracksStream.listen((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        loadAudioTracks();
-      });
-    });
+    trackPlaybackSubscription(_repository.audioTracksStream.listen((_) {
+      schedulePlaybackTask('audio-tracks', const Duration(milliseconds: 100), loadAudioTracks);
+    }));
 
-    _repository.completedStream.listen((completed) {
+    trackPlaybackSubscription(_repository.completedStream.listen((completed) {
       if (completed) {
         // Video playback completed - reset position to 0
         resetPositionOnVideoEnd();
       }
-    });
+    }));
   }
 
   /// Load a video file and start auto-save timer
   Future<void> loadVideoFile(VideoFile video) async {
+    if (playbackDisposed) return;
     _currentVideo = video;
+    _lastSaveTime = null;
+    await initialized;
+    if (playbackDisposed) return;
     await loadVideo(video.path);
+    if (playbackDisposed || _currentVideo != video) return;
     await _applyPlayerPreset();
+    if (playbackDisposed || _currentVideo != video) return;
     loadAudioTracks();
     loadSubtitleTracks();
     await applySubtitleSettings();
-    await Future.delayed(const Duration(milliseconds: 500));
+    if (playbackDisposed || _currentVideo != video) return;
     await _loadSidecarSubtitles();
+    if (playbackDisposed || _currentVideo != video) return;
     await _loadPersistedSubtitles();
+    if (playbackDisposed || _currentVideo != video) return;
     await loadSubtitleTracksWithRestore(video: video);
+    if (playbackDisposed || _currentVideo != video) return;
     await loadAudioTracksWithRestore(video: video);
+    if (playbackDisposed || _currentVideo != video) return;
     _startAutoSaveTimer();
   }
 
@@ -275,6 +279,7 @@ class PlayerController extends ChangeNotifier
     }
     try {
       final dirContents = await dartIo.Directory(dir).list().toList();
+    if (playbackDisposed) return;
       for (final entity in dirContents) {
         if (entity is dartIo.File) {
           final lowerPath = entity.path.toLowerCase();
@@ -297,8 +302,10 @@ class PlayerController extends ChangeNotifier
     } catch (_) {}
     final allSubPaths = [...exactMatches, ...anyMatches];
     for (final subPath in allSubPaths) {
+      if (playbackDisposed) return;
       try {
         await _repository.loadExternalSubtitle(subPath);
+    if (playbackDisposed) return;
         AppLogger.d('Loaded sidecar subtitle: $subPath');
       } catch (e) {
         AppLogger.e('Failed to load sidecar subtitle: $subPath, error: $e');
@@ -306,7 +313,9 @@ class PlayerController extends ChangeNotifier
     }
     if (allSubPaths.isNotEmpty) {
       await _persistSubtitlePaths(allSubPaths);
+    if (playbackDisposed) return;
     }
+    if (playbackDisposed) return;
     loadSubtitleTracks();
     AppLogger.d(
         'Total subtitle tracks after sidecar load: ${state.subtitleTracks.length}');
@@ -317,11 +326,13 @@ class PlayerController extends ChangeNotifier
     if (_currentVideo == null) return;
     try {
       final paths = await HistoryService.getSubtitlePaths(_currentVideo!.id);
+    if (playbackDisposed) return;
       AppLogger.d('Persisted subtitle paths for ${_currentVideo!.id}: $paths');
       for (final path in paths) {
         if (await _fileExists(path)) {
           try {
             await _repository.loadExternalSubtitle(path);
+    if (playbackDisposed) return;
             AppLogger.d('Loaded persisted subtitle: $path');
           } catch (e) {
             AppLogger.e('Failed to load persisted subtitle: $path, error: $e');
@@ -343,8 +354,10 @@ class PlayerController extends ChangeNotifier
     if (_currentVideo == null) return;
     try {
       final existing = await HistoryService.getSubtitlePaths(_currentVideo!.id);
+    if (playbackDisposed) return;
       final merged = {...existing, ...paths}.toList();
       await HistoryService.saveSubtitlePaths(_currentVideo!.id, merged);
+    if (playbackDisposed) return;
     } catch (_) {}
   }
 
@@ -361,6 +374,7 @@ class PlayerController extends ChangeNotifier
     _state.aspectRatioMode = AppSettingsService.presetAspectRatioMode;
     _state.repeatMode = AppSettingsService.presetRepeatMode;
     await _repository.setSpeed(_state.playbackSpeed);
+    if (playbackDisposed) return;
     notifyListeners();
   }
 
@@ -369,17 +383,13 @@ class PlayerController extends ChangeNotifier
         .applyVideoPerformanceConfiguration(
       AppSettingsService.videoPerformanceConfiguration,
     );
+    if (playbackDisposed) return;
   }
 
   Future<void> syncKeepScreenAwakePreference() async {
     await WakelockPlus.enable();
+    if (playbackDisposed) return;
   }
-
-  // @override
-  // Future<void> loadVideo(String path) async {
-  //   await super.loadVideo(path);
-  //   await applySubtitleSettings();
-  // }
 
   // Use the formatTime utility from the utils file
   String formatDuration(Duration duration) => formatTime(duration);
@@ -548,6 +558,7 @@ class PlayerController extends ChangeNotifier
 
   @override
   void dispose() {
+    disposePlaybackLifetime();
     // Timer should already be cancelled by saveAndCleanup(),
     // but cancel again as a safety net.
     _autoSaveTimer?.cancel();
