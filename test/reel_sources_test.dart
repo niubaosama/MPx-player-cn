@@ -58,6 +58,8 @@ void main() {
     final direct = await video('parent/direct.mp4');
     final nested = await video('parent/child/nested.mp4');
     await service.importFolder(direct.parent.path, includeSubfolders: false);
+    await service.importFolder(direct.parent.path);
+    expect((await service.getSources()).single.includeSubfolders, isFalse);
     expect((await service.getReelsVideos()).single.path, direct.path);
     await service.setIncludeSubfolders(direct.parent.path, true);
     expect((await service.getReelsVideos()).length, 2);

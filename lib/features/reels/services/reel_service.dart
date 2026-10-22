@@ -93,7 +93,8 @@ class ReelService {
     // 校验访问权限，不复制文件，也不创建目标目录。
     await Directory(path).list(followLinks: false).take(1).drain<void>();
     final source = ReelSource(path: path, includeSubfolders: includeSubfolders);
-    await _change((sources) => [
+    await _change((sources) => sources.any((item) =>
+        item.path == source.path && item.isFolder) ? sources : [
       ...sources.where((item) => item.path != source.path), source,
     ]);
     await _index.ensureIndexed(path, forceRefresh: true);
