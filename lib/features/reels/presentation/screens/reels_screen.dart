@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../player/domain/entities/playback_transfer.dart';
+import '../../../library/domain/entities/video_file.dart';
 import '../../../player/presentation/screens/video_player_screen.dart';
 import '../../controllers/reels_controller.dart';
 import '../widgets/reel_player_item.dart';
@@ -12,7 +13,10 @@ class ReelsScreen extends StatefulWidget {
   final bool isActive;
   final String? folderPath;
   final PlaybackTransfer? initialPlayback;
-  const ReelsScreen({super.key, this.isActive = true, this.folderPath, this.initialPlayback});
+  final ValueChanged<PlaybackTransfer>? onPlaybackChanged;
+  final Widget Function(BuildContext, VideoFile, ReelsController)? playerBuilder;
+  const ReelsScreen({super.key, this.isActive = true, this.folderPath, this.initialPlayback,
+    this.onPlaybackChanged, this.playerBuilder});
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
 }
@@ -26,15 +30,19 @@ class _ReelsScreenState extends State<ReelsScreen> {
         initialVideos: playback?.videos, initialVideoPath: playback?.video.path,
         initialPosition: playback?.position ?? Duration.zero,
         initialSpeed: playback?.speed ?? 1, initiallyPaused: playback?.paused ?? false),
-        child: const _ReelsContent(isActive: true, standalone: true));
+        child: _ReelsContent(isActive: true, standalone: true,
+          onPlaybackChanged: widget.onPlaybackChanged, playerBuilder: widget.playerBuilder));
     }
-    return _ReelsContent(isActive: widget.isActive, standalone: false);
+    return _ReelsContent(isActive: widget.isActive, standalone: false, playerBuilder: widget.playerBuilder);
   }
 }
 class _ReelsContent extends StatefulWidget {
   final bool isActive;
   final bool standalone;
-  const _ReelsContent({required this.isActive, required this.standalone});
+  final ValueChanged<PlaybackTransfer>? onPlaybackChanged;
+  final Widget Function(BuildContext, VideoFile, ReelsController)? playerBuilder;
+  const _ReelsContent({required this.isActive, required this.standalone,
+    this.onPlaybackChanged, this.playerBuilder});
   @override
   State<_ReelsContent> createState() => _ReelsContentState();
 }
@@ -43,7 +51,8 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
   int _revision = -1;
   bool _appActive = true;
   bool _routeCovered = false;
-  bool get _active => widget.isActive && _appActive && !_routeCovered;
+  bool get _active => widget.isActive && _appActive && !_routeCovered &&
+      (ModalRoute.of(context)?.isCurrent ?? true);
   @override
   void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
   @override
@@ -62,17 +71,26 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     final route = MaterialPageRoute<PlaybackTransfer>(builder: (_) => VideoPlayerScreen(
       video: playback.video, playlist: playback.videos, initialPlaylistIndex: playback.index,
       initialPosition: playback.position, initialPlaybackSpeed: playback.speed,
-      initiallyPaused: playback.paused, returnPlaybackState: !widget.standalone));
+      initiallyPaused: playback.paused, returnPlaybackState: !widget.standalone,
+      onPlaybackChanged: widget.standalone ? widget.onPlaybackChanged : (result) {
+        if (mounted) controller.selectVideo(result.video.path, result.position, result.speed, result.paused);
+      }));
     if (widget.standalone) {
+      widget.onPlaybackChanged?.call(playback);
       Navigator.of(context).pushReplacement(route);
     } else {
       setState(() => _routeCovered = true);
-      final result = await Navigator.of(context).push(route);
+      await Navigator.of(context).push(route);
       if (!mounted) { return; }
-      if (result != null) { controller.selectVideo(result.video.path, result.position, result.speed, result.paused); }
       setState(() => _routeCovered = false);
     }
   }
+  void _leave(ReelsController controller) {
+    final playback = _transfer(controller);
+    if (playback != null) widget.onPlaybackChanged?.call(playback);
+    Navigator.of(context).pop(playback);
+  }
+
   Future<void> _sources(ReelsController controller) async {
     setState(() => _routeCovered = true);
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true,
@@ -91,7 +109,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     }
     return PopScope<PlaybackTransfer>(canPop: !widget.standalone,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && widget.standalone) { Navigator.of(context).pop(_transfer(controller)); }
+        if (!didPop && widget.standalone) { _leave(controller); }
       },
       child: Scaffold(backgroundColor: Colors.black, body: Stack(children: [
         if (controller.reelsVideos.isNotEmpty) PageView.builder(
@@ -101,6 +119,8 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
           itemBuilder: (context, index) {
             final video = controller.reelsVideos[index];
             if (!_active || index != controller.currentIndex) { return const SizedBox.expand(); }
+            final playerBuilder = widget.playerBuilder;
+            if (playerBuilder != null) return playerBuilder(context, video, controller);
             return ReelPlayerItem(key: ValueKey(video.path), video: video,
               initialPosition: controller.positionFor(video.path),
               playbackSpeed: controller.playbackSpeed, isPaused: controller.isPaused,
@@ -121,7 +141,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
           ]))),
         SafeArea(bottom: false, child: Padding(padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
           child: Row(children: [
-            if (widget.standalone) IconButton(onPressed: () => Navigator.of(context).pop(_transfer(controller)),
+            if (widget.standalone) IconButton(onPressed: () => _leave(controller),
               icon: const Icon(Icons.arrow_back, color: Colors.white))
             else PopupMenuButton<ReelsSourceMode>(
               initialValue: controller.sourceMode, enabled: !controller.isLoading,

@@ -33,6 +33,7 @@ class VideoPlayerScreen extends StatefulWidget {
   final double? initialPlaybackSpeed;
   final bool initiallyPaused;
   final bool returnPlaybackState;
+  final ValueChanged<PlaybackTransfer>? onPlaybackChanged;
 
   const VideoPlayerScreen({
     super.key,
@@ -43,6 +44,7 @@ class VideoPlayerScreen extends StatefulWidget {
     this.initialPlaybackSpeed,
     this.initiallyPaused = false,
     this.returnPlaybackState = false,
+    this.onPlaybackChanged,
   });
 
   @override
@@ -120,6 +122,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         isInPipMode: _isInPipMode,
         skipHistoryResume: widget.initialPosition != null,
         returnPlaybackState: widget.returnPlaybackState,
+        onPlaybackChanged: widget.onPlaybackChanged,
       ),
       if (_loadError != null) Center(child: Material(color: Colors.black87,
         borderRadius: BorderRadius.circular(16), child: Padding(padding: const EdgeInsets.all(20),
@@ -147,6 +150,7 @@ class _VideoPlayerScreenContent extends StatefulWidget {
   final bool isInPipMode;
   final bool skipHistoryResume;
   final bool returnPlaybackState;
+  final ValueChanged<PlaybackTransfer>? onPlaybackChanged;
 
   const _VideoPlayerScreenContent({
     required this.video,
@@ -156,6 +160,7 @@ class _VideoPlayerScreenContent extends StatefulWidget {
     this.isInPipMode = false,
     this.skipHistoryResume = false,
     this.returnPlaybackState = false,
+    this.onPlaybackChanged,
   });
 
   @override
@@ -369,6 +374,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
+    widget.onPlaybackChanged?.call(playback);
     controller.pauseVideo();
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -381,13 +387,14 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
+    widget.onPlaybackChanged?.call(playback);
     controller.pauseVideo();
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     if (!mounted) { return; }
     Navigator.of(context).pushReplacement(MaterialPageRoute<PlaybackTransfer>(
-      builder: (_) => ReelsScreen(initialPlayback: playback)));
+      builder: (_) => ReelsScreen(initialPlayback: playback, onPlaybackChanged: widget.onPlaybackChanged)));
   }
 
   void _showSubtitleSettings(
@@ -432,6 +439,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
             initialPlaylistIndex: _currentIndex,
             initialPlaybackSpeed: controller.playbackSpeed,
             returnPlaybackState: widget.returnPlaybackState,
+            onPlaybackChanged: widget.onPlaybackChanged,
           ),
         ),
       );
@@ -457,6 +465,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
             initialPlaylistIndex: _currentIndex,
             initialPlaybackSpeed: controller.playbackSpeed,
             returnPlaybackState: widget.returnPlaybackState,
+            onPlaybackChanged: widget.onPlaybackChanged,
           ),
         ),
       );
