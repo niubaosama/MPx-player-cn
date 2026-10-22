@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../core/database/app_database.dart';
 import '../../../core/services/logger_service.dart';
@@ -12,397 +17,256 @@ class LibraryIndexSnapshot {
   final List<VideoFile> videos;
   final Map<String, int> folderVideoCounts;
   final DateTime indexedAt;
+  final bool isComplete;
 
   const LibraryIndexSnapshot({
     required this.videos,
     required this.folderVideoCounts,
     required this.indexedAt,
+    this.isComplete = true,
   });
 }
 
-class LibraryIndexService {
+class LibraryIndexService extends ChangeNotifier {
   static final LibraryIndexService _instance = LibraryIndexService._internal();
-
   factory LibraryIndexService() => _instance;
+  LibraryIndexService._internal() : _db = AppDatabase();
 
-  LibraryIndexService._internal();
+  @visibleForTesting
+  LibraryIndexService.forTesting(this._db);
 
-  final AppDatabase _db = AppDatabase();
+  final AppDatabase _db;
   final Map<String, LibraryIndexSnapshot> _snapshots = {};
   final Map<String, Future<LibraryIndexSnapshot>> _inFlight = {};
 
-  LibraryIndexSnapshot? getSnapshot(String rootPath) => _snapshots[rootPath];
+  LibraryIndexSnapshot? getSnapshot(String rootPath) => _snapshots[p.normalize(rootPath)];
 
-  Future<bool> hasPersistedIndex(String rootPath) async {
-    final db = await _db.database;
-    final metadata = await _db.getLibraryIndexMetadata(db, rootPath);
-    return metadata != null;
-  }
+  Future<bool> hasPersistedIndex(String rootPath) async =>
+      await _db.readLibraryIndexCache(p.normalize(rootPath)) != null;
 
   int? getFolderVideoCount(String rootPath, String folderPath) {
-    return _snapshots[rootPath]?.folderVideoCounts[folderPath];
+    final snapshot = getSnapshot(rootPath);
+    if (snapshot == null) return null;
+    return snapshot.folderVideoCounts[p.normalize(folderPath)] ??
+        (snapshot.isComplete ? 0 : null);
   }
 
-  Future<LibraryIndexSnapshot> ensureIndexed(
-    String rootPath, {
-    bool forceRefresh = false,
-  }) async {
-    if (!forceRefresh && _snapshots.containsKey(rootPath)) {
-      return _snapshots[rootPath]!;
+  /// 同一路径只扫描一次；已有完整索引直接复用。
+  Future<LibraryIndexSnapshot> ensureIndexed(String rootPath,
+      {bool forceRefresh = false}) {
+    rootPath = p.normalize(rootPath);
+    final active = _inFlight[rootPath];
+    if (active != null) return active;
+    final snapshot = _snapshots[rootPath];
+    if (!forceRefresh && snapshot != null && snapshot.isComplete) {
+      return Future.value(snapshot);
     }
-
-    if (!forceRefresh && _inFlight.containsKey(rootPath)) {
-      return _inFlight[rootPath]!;
-    }
-
     final future = _loadOrBuildIndex(rootPath, forceRefresh);
     _inFlight[rootPath] = future;
-
-    try {
-      final snapshot = await future;
-      _snapshots[rootPath] = snapshot;
-      return snapshot;
-    } finally {
-      _inFlight.remove(rootPath);
-    }
+    return future;
   }
 
-  Future<LibraryIndexSnapshot> _loadOrBuildIndex(
-      String rootPath, bool forceRefresh) async {
-    if (!forceRefresh) {
-      final db = await _db.database;
-      final metadata = await _db.getLibraryIndexMetadata(db, rootPath);
-
-      if (metadata != null) {
-        AppLogger.i('Loading library index from database for $rootPath');
-        final videos = await _db.getAllVideos();
-
-        // Filter videos that belong to this root path (if multiple roots supported)
-        final rootVideos =
-            videos.where((v) => v.path.startsWith(rootPath)).toList();
-
-        if (rootVideos.isNotEmpty) {
-          final folderVideoCounts = <String, int>{};
-          for (final video in rootVideos) {
-            _incrementFolderCounts(
-                folderVideoCounts, rootPath, video.folderPath);
-          }
-
-          return LibraryIndexSnapshot(
-            videos: rootVideos,
-            folderVideoCounts: folderVideoCounts,
-            indexedAt:
-                DateTime.fromMillisecondsSinceEpoch(metadata['indexed_at']),
-          );
+  Future<LibraryIndexSnapshot> _loadOrBuildIndex(String rootPath, bool forceRefresh) async {
+    var restored = false;
+    try {
+      if (!forceRefresh) {
+        final cached = await _db.readLibraryIndexCache(rootPath);
+        if (cached != null) {
+          final videos = await compute(_decodeIndexVideos, cached['videos_json'] as String);
+          final snapshot = _snapshot(rootPath, videos,
+              DateTime.fromMillisecondsSinceEpoch(cached['indexed_at'] as int));
+          _publish(rootPath, snapshot);
+          restored = true;
+          return snapshot;
         }
       }
-    }
-
-    return _buildIndex(rootPath);
-  }
-
-  Future<List<VideoFile>> search(
-    String rootPath,
-    String query, {
-    LibrarySearchSort sortBy = LibrarySearchSort.relevance,
-  }) async {
-    final normalizedQuery = query.trim().toLowerCase();
-    if (normalizedQuery.isEmpty) {
-      return const [];
-    }
-
-    final snapshot = await ensureIndexed(rootPath);
-    final terms = normalizedQuery
-        .split(RegExp(r'\s+'))
-        .where((term) => term.isNotEmpty)
-        .toList(growable: false);
-
-    final matches = <_ScoredVideo>[];
-
-    for (final video in snapshot.videos) {
-      final score = _scoreVideo(video, normalizedQuery, terms);
-      if (score > 0) {
-        matches.add(_ScoredVideo(video: video, score: score));
+      return await _buildIndex(rootPath);
+    } finally {
+      _inFlight.remove(rootPath);
+      // 缓存先显示；变化在后台核对，不阻塞首次进入目录。
+      if (restored) {
+        unawaited(refreshInBackground(rootPath).catchError((Object e, StackTrace st) {
+          AppLogger.e('Background library refresh failed: $rootPath', e);
+        }));
       }
     }
+  }
 
+  /// 首页和文件夹来源共用索引；完整的父目录索引可直接回答子目录查询。
+  Future<List<VideoFile>> getVideosInFolder(String folderPath,
+      {bool includeSubfolders = true, bool forceRefresh = false}) async {
+    folderPath = p.normalize(folderPath);
+    LibraryIndexSnapshot? snapshot;
+    if (!forceRefresh) {
+      final candidates = _snapshots.entries.where((e) =>
+          e.value.isComplete && (e.key == folderPath || p.isWithin(e.key, folderPath))).toList()
+        ..sort((a, b) => b.value.indexedAt.compareTo(a.value.indexedAt));
+      if (candidates.isNotEmpty) snapshot = candidates.first.value;
+    }
+    snapshot ??= await ensureIndexed(folderPath, forceRefresh: forceRefresh);
+    return snapshot.videos.where((video) =>
+        video.folderPath == folderPath ||
+        (includeSubfolders && p.isWithin(folderPath, video.path))).toList();
+  }
+
+  Future<List<VideoFile>> search(String rootPath, String query,
+      {LibrarySearchSort sortBy = LibrarySearchSort.relevance}) async {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return const [];
+    final snapshot = await ensureIndexed(rootPath);
+    final terms = normalizedQuery.split(RegExp(r'\s+')).where((term) => term.isNotEmpty).toList();
+    final matches = <_ScoredVideo>[];
+    for (final video in snapshot.videos) {
+      final score = _scoreVideo(video, normalizedQuery, terms);
+      if (score > 0) matches.add(_ScoredVideo(video: video, score: score));
+    }
     matches.sort((a, b) => _compareMatches(a, b, sortBy));
     return matches.map((match) => match.video).toList(growable: false);
   }
 
   Future<void> invalidate(String rootPath) async {
+    rootPath = p.normalize(rootPath);
+    final active = _inFlight[rootPath];
+    if (active != null) await active;
     _snapshots.remove(rootPath);
-    _inFlight.remove(rootPath);
-    try {
-      final db = await _db.database;
-      await _db.deleteLibraryIndexMetadata(db, rootPath);
-    } catch (e) {
-      AppLogger.e('Failed to invalidate library index in database: $e');
-    }
+    await _db.removeLibraryIndexCache(rootPath);
+    notifyListeners();
   }
 
-  Future<void> refreshInBackground(String rootPath) {
-    if (_inFlight.containsKey(rootPath)) {
-      return _inFlight[rootPath]!.then((_) {});
-    }
-
-    return ensureIndexed(rootPath, forceRefresh: true).then((_) {});
+  Future<void> refreshInBackground(String rootPath) async {
+    await ensureIndexed(rootPath, forceRefresh: true);
   }
 
-  /// Incrementally update the index for a single directory.
-  /// Much faster than a full rebuild: only scans the given folder,
-  /// diffs against the current snapshot, and applies minimal DB changes.
+  /// 仅比较本次成功列举的目录，保留仍存在的子目录视频。
   Future<void> updateIndexIncremental(String rootPath, String dirPath) async {
-    final snapshot = _snapshots[rootPath];
-    if (snapshot == null) {
-      // No snapshot yet – fall back to full index build
+    rootPath = p.normalize(rootPath);
+    dirPath = p.normalize(dirPath);
+    final active = _inFlight[rootPath];
+    if (active != null) await active;
+    final old = _snapshots[rootPath];
+    if (old == null) {
       await ensureIndexed(rootPath);
       return;
     }
-
-    // Build a set of existing video paths in this directory from the snapshot
-    final existingVideos = <String, VideoFile>{};
-    for (final v in snapshot.videos) {
-      if (v.folderPath == dirPath || v.folderPath.startsWith('$dirPath/')) {
-        existingVideos[v.path] = v;
-      }
-    }
-
-    // Scan the filesystem for current video files
-    final currentVideoPaths = <String>{};
-    final newVideos = <VideoFile>[];
+    final known = {for (final v in old.videos) v.path: v};
+    final direct = <String, VideoFile>{};
+    final children = <String>{};
     try {
-      final dir = Directory(dirPath);
-      if (!await dir.exists()) return;
-
-      await for (final entity in dir.list(followLinks: false)) {
-        if (entity is! File) continue;
-        final name = entity.path.split('/').last;
-        if (!FileItem.isVideoFileName(name)) continue;
-
-        currentVideoPaths.add(entity.path);
-        if (!existingVideos.containsKey(entity.path)) {
-          final stat = await entity.stat();
-          final item = FileItem(
-            path: entity.path,
-            name: name,
-            isDirectory: false,
-            size: stat.size,
-            modified: stat.modified,
-          );
-          newVideos.add(VideoFile.fromFileItem(item, dirPath));
+      await for (final entity in Directory(dirPath).list(followLinks: false)) {
+        if (entity is Directory) {
+          children.add(p.normalize(entity.path));
+        } else if (entity is File && FileItem.isVideoFileName(p.basename(entity.path))) {
+          final video = await _readVideo(entity, previous: known[p.normalize(entity.path)]);
+          direct[video.path] = video;
         }
       }
-    } catch (_) {
+    } on FileSystemException catch (e) {
+      AppLogger.e('Cannot refresh library directory: $dirPath', e);
       return;
     }
-
-    // Determine deleted videos
-    final deletedPaths =
-        existingVideos.keys.toSet().difference(currentVideoPaths);
-
-    if (newVideos.isEmpty && deletedPaths.isEmpty) return; // No changes
-
-    // Update snapshot in memory
-    final updatedVideos = List<VideoFile>.from(snapshot.videos)
-      ..removeWhere((v) => deletedPaths.contains(v.path))
-      ..addAll(newVideos);
-
-    final updatedCounts = Map<String, int>.from(snapshot.folderVideoCounts);
-
-    // Remove counts for deleted videos
-    for (final deletedPath in deletedPaths) {
-      final video = existingVideos[deletedPath]!;
-      _decrementFolderCounts(updatedCounts, rootPath, video.folderPath);
-    }
-
-    // Add counts for new videos
-    for (final video in newVideos) {
-      _incrementFolderCounts(updatedCounts, rootPath, video.folderPath);
-    }
-
-    final updatedSnapshot = LibraryIndexSnapshot(
-      videos: updatedVideos,
-      folderVideoCounts: updatedCounts,
-      indexedAt: snapshot.indexedAt,
-    );
-    _snapshots[rootPath] = updatedSnapshot;
-
-    // Persist changes to DB
-    try {
-      if (newVideos.isNotEmpty) {
-        await _db.insertVideos(newVideos);
-      }
-      for (final deletedPath in deletedPaths) {
-        final video = existingVideos[deletedPath]!;
-        await _db.deleteVideo(video.id);
-      }
-    } catch (e) {
-      AppLogger.e('Incremental index DB update failed: $e');
-    }
+    final videos = old.videos.where((video) {
+      if (video.folderPath == dirPath) return false;
+      if (!p.isWithin(dirPath, video.path)) return true;
+      return children.any((child) => p.isWithin(child, video.path));
+    }).toList()..addAll(direct.values);
+    final snapshot = _snapshot(rootPath, videos, DateTime.now());
+    _publish(rootPath, snapshot);
+    // 仅更新索引和元数据；不删除原文件、历史或收藏记录。
+    await _persist(rootPath, snapshot);
   }
 
   Future<LibraryIndexSnapshot> _buildIndex(String rootPath) async {
-    AppLogger.i('Building library index from scratch for $rootPath');
-    final root = Directory(rootPath);
-    if (!await root.exists()) {
-      return LibraryIndexSnapshot(
-        videos: [],
-        folderVideoCounts: {},
-        indexedAt: DateTime.fromMillisecondsSinceEpoch(0),
-      );
-    }
-
     final videos = <VideoFile>[];
-    final folderVideoCounts = <String, int>{};
-    final directories = <String>[rootPath];
-    var processedDirectories = 0;
-
-    while (directories.isNotEmpty) {
-      final currentPath = directories.removeLast();
-      final currentDirectory = Directory(currentPath);
-
+    final previous = _snapshots[rootPath];
+    final known = {for (final v in previous?.videos ?? await _db.getAllVideos()) v.path: v};
+    final pending = <String>[rootPath];
+    final watch = Stopwatch()..start();
+    while (pending.isNotEmpty) {
+      final currentPath = pending.removeLast();
       try {
-        await for (final entity in currentDirectory.list(followLinks: false)) {
+        await for (final entity in Directory(currentPath).list(followLinks: false)) {
           if (entity is Directory) {
-            final name = entity.path.split('/').last;
-            if (_shouldSkipDirectory(entity.path, name)) {
-              continue;
-            }
-            directories.add(entity.path);
-            continue;
+            final name = p.basename(entity.path);
+            if (!name.startsWith('.') && name != 'Android') pending.add(entity.path);
+          } else if (entity is File && !p.basename(entity.path).startsWith('.') &&
+              FileItem.isVideoFileName(p.basename(entity.path))) {
+            videos.add(await _readVideo(entity, previous: known[p.normalize(entity.path)]));
           }
-
-          if (entity is! File) {
-            continue;
+          if (watch.elapsedMilliseconds >= 100) {
+            // 刷新期间保留旧结果，首轮扫描则逐批展示已找到的目录。
+            final visible = <String, VideoFile>{
+              for (final v in previous?.videos ?? <VideoFile>[]) v.path: v,
+              for (final v in videos) v.path: v,
+            };
+            _publish(rootPath, _snapshot(rootPath, visible.values.toList(),
+                DateTime.now(), isComplete: false));
+            watch.reset();
+            await Future<void>.delayed(Duration.zero);
           }
-
-          final name = entity.path.split('/').last;
-          if (!FileItem.isVideoFileName(name)) {
-            continue;
-          }
-
-          final stat = await entity.stat();
-          final folderPath = _parentPath(entity.path);
-          final item = FileItem(
-            path: entity.path,
-            name: name,
-            isDirectory: false,
-            size: stat.size,
-            modified: stat.modified,
-          );
-
-          videos.add(VideoFile.fromFileItem(item, folderPath));
-          _incrementFolderCounts(folderVideoCounts, rootPath, folderPath);
         }
-      } catch (_) {
-        // Ignore folders the app cannot access.
-      }
-
-      processedDirectories++;
-      if (processedDirectories % 25 == 0) {
-        await Future<void>.delayed(Duration.zero);
+      } on FileSystemException catch (e) {
+        AppLogger.e('Skipping inaccessible library path: $currentPath', e);
       }
     }
-
-    final now = DateTime.now();
-    final snapshot = LibraryIndexSnapshot(
-      videos: videos,
-      folderVideoCounts: folderVideoCounts,
-      indexedAt: now,
-    );
-
-    // Persist to database
-    try {
-      final db = await _db.database;
-      await _db.insertVideos(videos);
-
-      // Group videos by folder for correct folder persistence
-      final videosByFolder = <String, List<VideoFile>>{};
-      for (final video in videos) {
-        videosByFolder.putIfAbsent(video.folderPath, () => []).add(video);
-      }
-
-      final folders = videosByFolder.entries
-          .map((entry) => VideoFolder(
-                path: entry.key,
-                name: entry.key.split('/').last,
-                videos: entry.value,
-              ))
-          .toList();
-
-      await _db.insertFolders(folders);
-
-      await _db.saveLibraryIndexMetadata(db, rootPath, now);
-      AppLogger.i(
-          'Saved ${videos.length} videos and index metadata to database');
-    } catch (e) {
-      AppLogger.e('Failed to persist library index: $e');
-    }
-
+    final snapshot = _snapshot(rootPath, videos, DateTime.now());
+    _publish(rootPath, snapshot);
+    await _persist(rootPath, snapshot);
     return snapshot;
   }
 
-  bool _shouldSkipDirectory(String path, String name) {
-    if (name.startsWith('.')) {
-      return true;
-    }
-
-    if (path.endsWith('/Android') || path.contains('/Android/')) {
-      return true;
-    }
-
-    return false;
+  Future<VideoFile> _readVideo(File file, {VideoFile? previous}) async {
+    final stat = await file.stat();
+    final path = p.normalize(file.path);
+    final item = FileItem(path: path, name: p.basename(path),
+        isDirectory: false, size: stat.size, modified: stat.modified);
+    final scanned = VideoFile.fromFileItem(item, p.dirname(path));
+    if (previous == null) return scanned;
+    final unchanged = previous.size == stat.size;
+    return VideoFile(id: previous.id, path: path, title: scanned.title,
+        folderPath: scanned.folderPath, folderName: scanned.folderName,
+        size: stat.size, duration: unchanged ? previous.duration : 0,
+        dateAdded: previous.dateAdded,
+        width: unchanged ? previous.width : null,
+        height: unchanged ? previous.height : null,
+        thumbnailPath: unchanged ? previous.thumbnailPath : null);
   }
 
-  void _incrementFolderCounts(
-    Map<String, int> folderVideoCounts,
-    String rootPath,
-    String folderPath,
-  ) {
-    var currentPath = folderPath;
-
-    while (currentPath.startsWith(rootPath)) {
-      folderVideoCounts[currentPath] =
-          (folderVideoCounts[currentPath] ?? 0) + 1;
-
-      if (currentPath == rootPath) {
-        break;
+  Future<void> _persist(String rootPath, LibraryIndexSnapshot snapshot) async {
+    try {
+      await _db.insertVideos(snapshot.videos);
+      final grouped = <String, List<VideoFile>>{};
+      for (final video in snapshot.videos) {
+        grouped.putIfAbsent(video.folderPath, () => []).add(video);
       }
-
-      final parentPath = _parentPath(currentPath);
-      if (parentPath == currentPath) {
-        break;
-      }
-      currentPath = parentPath;
+      await _db.insertFolders(grouped.entries.map((e) => VideoFolder(
+          path: e.key, name: p.basename(e.key), videos: e.value)).toList());
+      final json = await compute(_encodeIndexVideos, snapshot.videos);
+      await _db.writeLibraryIndexCache(rootPath, json, snapshot.indexedAt);
+    } catch (e) {
+      AppLogger.e('Failed to persist library index: $rootPath', e);
+      rethrow;
     }
   }
 
-  void _decrementFolderCounts(
-    Map<String, int> folderVideoCounts,
-    String rootPath,
-    String folderPath,
-  ) {
-    var currentPath = folderPath;
-
-    while (currentPath.startsWith(rootPath)) {
-      final current = folderVideoCounts[currentPath] ?? 0;
-      if (current <= 1) {
-        folderVideoCounts.remove(currentPath);
-      } else {
-        folderVideoCounts[currentPath] = current - 1;
+  LibraryIndexSnapshot _snapshot(String rootPath, List<VideoFile> videos,
+      DateTime indexedAt, {bool isComplete = true}) {
+    final counts = <String, int>{};
+    for (final video in videos) {
+      var folder = video.folderPath;
+      while (folder == rootPath || p.isWithin(rootPath, folder)) {
+        counts[folder] = (counts[folder] ?? 0) + 1;
+        if (folder == rootPath) break;
+        folder = p.dirname(folder);
       }
-
-      if (currentPath == rootPath) {
-        break;
-      }
-
-      final parentPath = _parentPath(currentPath);
-      if (parentPath == currentPath) {
-        break;
-      }
-      currentPath = parentPath;
     }
+    return LibraryIndexSnapshot(videos: List.unmodifiable(videos),
+        folderVideoCounts: Map.unmodifiable(counts), indexedAt: indexedAt,
+        isComplete: isComplete);
+  }
+
+  void _publish(String rootPath, LibraryIndexSnapshot snapshot) {
+    _snapshots[rootPath] = snapshot;
+    notifyListeners();
   }
 
   int _scoreVideo(VideoFile video, String query, List<String> terms) {
@@ -549,13 +413,7 @@ class LibraryIndexService {
     }
   }
 
-  String _parentPath(String path) {
-    final lastSeparator = path.lastIndexOf('/');
-    if (lastSeparator <= 0) {
-      return '/';
-    }
-    return path.substring(0, lastSeparator);
-  }
+
 }
 
 class _ScoredVideo {
@@ -564,3 +422,9 @@ class _ScoredVideo {
 
   const _ScoredVideo({required this.video, required this.score});
 }
+
+List<VideoFile> _decodeIndexVideos(String value) => (jsonDecode(value) as List)
+    .map((row) => VideoFile.fromJson(Map<String, dynamic>.from(row as Map))).toList();
+
+String _encodeIndexVideos(List<VideoFile> videos) =>
+    jsonEncode(videos.map((video) => video.toJson()).toList());

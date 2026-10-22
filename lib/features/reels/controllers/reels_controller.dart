@@ -8,7 +8,10 @@ class ReelsController extends ChangeNotifier {
   List<VideoFile> _reelsVideos = [];
   bool _isLoading = false;
   String? _error;
-  String? _reelsFolderPath;
+  final ReelService _service;
+  List<ReelSource> _sources = [];
+  bool _disposed = false;
+  Future<void>? _loadFuture;
   final String? targetFolderPath;
   ReelsSortOrder _sortOrder = ReelsSortOrder.dateDesc;
   double _playbackSpeed = 1.0;
@@ -17,50 +20,48 @@ class ReelsController extends ChangeNotifier {
   List<VideoFile> get reelsVideos => _reelsVideos;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  String? get reelsFolderPath => _reelsFolderPath;
+  List<ReelSource> get sources => List.unmodifiable(_sources);
   ReelsSortOrder get sortOrder => _sortOrder;
   double get playbackSpeed => _playbackSpeed;
   bool get isPaused => _isPaused;
 
-  ReelsController({this.targetFolderPath}) {
+  ReelsController({this.targetFolderPath, ReelService? service})
+      : _service = service ?? ReelService() {
     loadReels();
-    if (targetFolderPath == null) {
-      _loadFolderPath();
-    } else {
-      _reelsFolderPath = targetFolderPath;
-    }
   }
 
-  Future<void> _loadFolderPath() async {
-    _reelsFolderPath = await ReelService.getReelsFolderPath();
-    notifyListeners();
+  Future<void> loadReels({bool forceRefresh = false}) {
+    if (_loadFuture != null) return _loadFuture!;
+    final future = _loadReels(forceRefresh);
+    _loadFuture = future;
+    return future;
   }
 
-  Future<void> loadReels() async {
+  Future<void> _loadReels(bool forceRefresh) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
-
+    _notify();
     try {
-      if (targetFolderPath != null) {
-        _reelsVideos =
-            await ReelService.getVideosFromAnyFolder(targetFolderPath!);
-      } else {
-        _reelsVideos = await ReelService.getReelsVideos();
-      }
+      _sources = await _service.getSources();
+      _reelsVideos = targetFolderPath == null
+          ? await _service.getReelsVideos(forceRefresh: forceRefresh)
+          : await _service.getVideosFromAnyFolder(targetFolderPath!, forceRefresh: forceRefresh);
       _applySort();
     } catch (e) {
       _error = 'Failed to load reels: $e';
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _loadFuture = null;
+      _notify();
     }
   }
+
+  void _notify() { if (!_disposed) notifyListeners(); }
 
   void changeSortOrder(ReelsSortOrder order) {
     _sortOrder = order;
     _applySort();
-    notifyListeners();
+    _notify();
   }
 
   void _applySort() {
@@ -85,13 +86,13 @@ class ReelsController extends ChangeNotifier {
 
   void togglePause() {
     _isPaused = !_isPaused;
-    notifyListeners();
+    _notify();
   }
 
   void setPaused(bool paused) {
     if (_isPaused != paused) {
       _isPaused = paused;
-      notifyListeners();
+      _notify();
     }
   }
 
@@ -99,54 +100,41 @@ class ReelsController extends ChangeNotifier {
     const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
     final currentIndex = speeds.indexOf(_playbackSpeed);
     _playbackSpeed = speeds[(currentIndex + 1) % speeds.length];
-    notifyListeners();
+    _notify();
   }
 
   void setPlaybackSpeed(double speed) {
     _playbackSpeed = speed;
-    notifyListeners();
+    _notify();
   }
 
   void resetPlaybackSpeed() {
     _playbackSpeed = 1.0;
-    notifyListeners();
+    _notify();
   }
 
-  Future<void> importFolderToReels(String folderPath) async {
-    if (targetFolderPath != null) {
-      return;
-    }
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      await ReelService.importFolder(folderPath);
-      await loadReels();
-    } catch (e) {
-      _error = 'Failed to import folder: $e';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+  Future<void> _changeSources(Future<void> Function() change) async {
+    if (targetFolderPath != null) return;
+    if (_loadFuture != null) await _loadFuture;
+    await change();
+    await loadReels();
   }
 
-  Future<void> importVideoToReels(String filePath) async {
-    if (targetFolderPath != null) {
-      return;
-    }
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  Future<void> importFolderToReels(String folderPath) =>
+      _changeSources(() => _service.importFolder(folderPath));
 
-    try {
-      await ReelService.importVideoFile(filePath);
-      await loadReels();
-    } catch (e) {
-      _error = 'Failed to import video: $e';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+  Future<void> importVideoToReels(String filePath) =>
+      _changeSources(() => _service.importVideoFile(filePath));
+
+  Future<void> removeSource(String path) =>
+      _changeSources(() => _service.removeSource(path));
+
+  Future<void> setIncludeSubfolders(String path, bool enabled) =>
+      _changeSources(() => _service.setIncludeSubfolders(path, enabled));
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

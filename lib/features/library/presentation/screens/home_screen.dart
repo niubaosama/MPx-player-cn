@@ -75,9 +75,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     try {
       await reelsController.importFolderToReels(currentPath);
-      _showSnackBar(context.tr('Folder imported to Reels!'), Colors.green);
+      if (!mounted) return;
+      _showSnackBar(context.tr('Folder added to Reels. No videos were copied.'), Colors.green);
     } catch (e) {
-      _showSnackBar(context.tr('Failed to import folder: {value0}', {'value0': e}), Colors.red);
+      if (!mounted) return;
+      _showSnackBar(context.tr('Failed to add folder: {value0}', {'value0': e}), Colors.red);
     }
   }
 

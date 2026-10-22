@@ -26,7 +26,7 @@ class AppDatabase
   AppDatabase._internal();
 
   static const String _databaseName = 'mpx_player.db';
-  static const int _databaseVersion = 6;
+  static const int _databaseVersion = 7;
 
   /// Get database instance (singleton)
   @override
@@ -50,6 +50,7 @@ class AppDatabase
   /// Create tables on first launch
   Future<void> _onCreate(Database db, int version) async {
     AppLogger.i('Creating database tables (version $version)');
+    await _createLibraryIndexCache(db);
 
     // Library Index Metadata table
     await db.execute('''
@@ -142,6 +143,9 @@ class AppDatabase
   /// Handle database upgrades
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     AppLogger.i('Upgrading database from $oldVersion to $newVersion');
+    if (oldVersion < 7) {
+      await _createLibraryIndexCache(db);
+    }
 
     if (oldVersion < 2) {
       AppLogger.i('Migrating to version 2: Adding watch_history table');
@@ -208,6 +212,15 @@ class AppDatabase
       AppLogger.i('selected_audio_track column added');
     }
   }
+
+  /// 索引缓存独立保存，不清理历史、收藏或原视频记录。
+  Future<void> _createLibraryIndexCache(Database db) => db.execute('''
+    CREATE TABLE library_index_cache (
+      root_path TEXT PRIMARY KEY,
+      videos_json TEXT NOT NULL,
+      indexed_at INTEGER NOT NULL
+    )
+  ''');
 
   /// Close database connection
   Future<void> close() async {

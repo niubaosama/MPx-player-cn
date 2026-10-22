@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import '../../../core/services/logger_service.dart';
 import '../domain/entities/file_item.dart';
 import '../data/datasources/directory_browser.dart';
 import '../services/library_index_service.dart';
@@ -17,12 +18,17 @@ class FileBrowserController extends ChangeNotifier {
 
   static final FileBrowserController _instance = FileBrowserController._internal();
   factory FileBrowserController() => _instance;
-  FileBrowserController._internal();
+  FileBrowserController._internal() {
+    _indexService.addListener(_onIndexChanged);
+  }
 
   final DirectoryBrowser _browser = DirectoryBrowser();
   final LibraryIndexService _indexService = LibraryIndexService();
 
   List<FileItem> _items = [];
+  List<FileItem> _directoryItems = [];
+  int _visibilityRevision = 0;
+  bool _disposed = false;
   final List<String> _pathHistory = [];
   String _currentPath = '';
   bool _isLoading = false;
@@ -71,15 +77,10 @@ class FileBrowserController extends ChangeNotifier {
         _persistedPathHistory.where((path) => path.startsWith(rootPath)),
       );
 
-    if (_indexService.getSnapshot(rootPath) == null &&
-        await _indexService.hasPersistedIndex(rootPath)) {
-      await _indexService.ensureIndexed(rootPath);
-    }
-
     await loadDirectory(_currentPath, addToHistory: false);
     _isInitialized = true;
     notifyListeners();
-    unawaited(_indexService.ensureIndexed(rootPath));
+    _scheduleIndex();
   }
 
   Future<void> loadDirectory(String path,
@@ -99,6 +100,8 @@ class FileBrowserController extends ChangeNotifier {
     // Don't force refresh browser cache on initial Load to be fast.
     // Refresh command will handle browser cache invalidation.
     final items = await _browser.listDirectory(path);
+    if (_disposed || _currentPath != path) return;
+    _directoryItems = items;
 
     // Filter items based on the best available data
     final filtered = _prepareVisibleItems(items);
@@ -113,7 +116,7 @@ class FileBrowserController extends ChangeNotifier {
     _startWatching(path);
 
     // Always schedule background hydration to ensure counts are fresh
-    _scheduleFolderHydration(path, items);
+    _scheduleIndex();
   }
 
   List<FileItem> _prepareVisibleItems(List<FileItem> items) {
@@ -143,81 +146,33 @@ class FileBrowserController extends ChangeNotifier {
     }).toList();
   }
 
-  void _scheduleFolderHydration(String path, List<FileItem> items) {
-    if (!_showOnlyVideos) return;
-    unawaited(_hydrateFolderVisibilityBatch(path, items));
+  /// 同一目录树共用一个索引任务，不再逐页重复递归统计。
+  void _scheduleIndex() {
+    unawaited(_ensureIndex());
   }
 
-  Future<void> _hydrateFolderVisibilityBatch(
-      String path, List<FileItem> items) async {
-    final rootPath = _browser.getRootPath();
-    final folders = items.where((item) => item.isDirectory).toList();
-
-    if (folders.isEmpty) return;
-
-    final List<FileItem> foldersToHide = [];
-
-    // Process folders in batches of 5
-    for (var i = 0; i < folders.length; i += 5) {
-      final batch = folders.skip(i).take(5).toList();
-
-      await Future.wait(batch.map((item) async {
-        final indexedCount =
-            _indexService.getFolderVideoCount(rootPath, item.path);
-        if (indexedCount != null) {
-          if (indexedCount == 0) {
-            foldersToHide.add(item);
-          }
-          return;
-        }
-
-        final cachedCount = _browser.getVideoCount(item.path);
-        if (cachedCount != null) {
-          if (cachedCount == 0) {
-            foldersToHide.add(item);
-          }
-          return;
-        }
-
-        final videoCount = await _countVideosRecursively(item.path);
-        _browser.setVideoCount(item.path, videoCount);
-        item.videoCount = videoCount;
-        if (videoCount == 0) {
-          foldersToHide.add(item);
-        }
-      }));
-    }
-
-    // Notify once after entire batch completes
-    if (_currentPath == path && _showOnlyVideos && foldersToHide.isNotEmpty) {
-      _items = _items.where((item) => !foldersToHide.contains(item)).toList();
-      notifyListeners();
-    }
-  }
-
-  Future<int> _countVideosRecursively(String path, {int depth = 0}) async {
-    if (depth > 2) return 0; // Shallow for speed
-    if (path.endsWith('/Android') || path.contains('/Android/')) return 0;
-
-    int count = 0;
+  Future<void> _ensureIndex() async {
     try {
-      final dir = Directory(path);
-      if (!await dir.exists()) return 0;
-
-      final entities = await dir.list(followLinks: false).toList();
-      for (final entity in entities) {
-        if (entity is File) {
-          if (FileItem.isVideoFileName(entity.path.split('/').last)) count++;
-        } else if (entity is Directory) {
-          final name = entity.path.split('/').last;
-          if (!name.startsWith('.')) {
-            count +=
-                await _countVideosRecursively(entity.path, depth: depth + 1);
-          }
-        }
+      await _indexService.ensureIndexed(_browser.getRootPath());
+    } catch (e) {
+      AppLogger.e('Library index failed', e);
+      if (!_disposed) {
+        _error = 'Failed to update library index: $e';
+        notifyListeners();
       }
-    } catch (_) {}
-    return count;
+    }
+  }
+
+  void _onIndexChanged() {
+    if (_disposed || _currentPath.isEmpty) return;
+    final path = _currentPath;
+    final revision = ++_visibilityRevision;
+    final items = _prepareVisibleItems(_directoryItems);
+    unawaited(sortFileItemsIsolate(items, _sortBy, _sortOrder).then((sorted) {
+      if (_disposed || path != _currentPath || revision != _visibilityRevision) return;
+      _items = sorted;
+      notifyListeners();
+    }));
   }
 
   Future<void> goBack() async {
@@ -226,11 +181,13 @@ class FileBrowserController extends ChangeNotifier {
     _currentPath = previousPath;
     _persistNavigationState();
     final items = await _browser.listDirectory(previousPath);
+    if (_disposed || _currentPath != previousPath) return;
+    _directoryItems = items;
     _items = _prepareVisibleItems(items);
     await _sortItems();
     notifyListeners();
     _startWatching(previousPath);
-    _scheduleFolderHydration(previousPath, items);
+    _scheduleIndex();
   }
 
   Future<void> navigateToFolder(FileItem folder) async {
@@ -261,7 +218,6 @@ class FileBrowserController extends ChangeNotifier {
     _showOnlyVideos = !_showOnlyVideos;
     unawaited(LibraryPreferencesService.setShowOnlyVideos(_showOnlyVideos));
     _browser.invalidatePath(_currentPath);
-    _indexService.invalidate(_browser.getRootPath());
     loadDirectory(_currentPath, addToHistory: false);
   }
 
@@ -292,20 +248,19 @@ class FileBrowserController extends ChangeNotifier {
   }
 
   Future<void> _sortItems() async {
-    _items = await sortFileItemsIsolate(_items, _sortBy, _sortOrder);
+    final revision = ++_visibilityRevision;
+    final sorted = await sortFileItemsIsolate(_items, _sortBy, _sortOrder);
+    if (!_disposed && revision == _visibilityRevision) _items = sorted;
   }
 
   Future<void> refresh({bool silent = false}) async {
     final rootPath = _browser.getRootPath();
     final refreshedPath = _currentPath;
 
-    // Invalidate the full path tree, not just the current path
     _browser.invalidatePathTree(refreshedPath);
-    await _indexService.refreshInBackground(rootPath);
-
-    if (_currentPath != refreshedPath) return;
-
     await loadDirectory(refreshedPath, addToHistory: false, silent: silent);
+    // 目录先显示，完整索引更新通过监听分批刷新计数。
+    await _indexService.refreshInBackground(rootPath);
   }
 
   void toggleSelection(String path) {
@@ -392,6 +347,8 @@ class FileBrowserController extends ChangeNotifier {
     await _indexService.updateIndexIncremental(rootPath, watchedPath);
     // Reload directory listing silently (no spinner)
     final items = await _browser.listDirectory(watchedPath);
+    if (_disposed || _currentPath != watchedPath) return;
+    _directoryItems = items;
     _items = _prepareVisibleItems(items);
     await _sortItems();
     notifyListeners();
@@ -399,6 +356,9 @@ class FileBrowserController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _visibilityRevision++;
+    _indexService.removeListener(_onIndexChanged);
     _stopWatching();
     super.dispose();
   }

@@ -8,7 +8,7 @@ import 'package:mpx/features/reels/presentation/widgets/reels_sort_menu.dart';
 import 'package:mpx/features/reels/presentation/widgets/reels_swipe_hint.dart';
 import 'package:mpx/features/reels/presentation/widgets/custom_folder_back_button.dart';
 import 'package:mpx/features/reels/presentation/widgets/custom_folder_back_hint.dart';
-import 'package:mpx/features/library/controller/file_browser_controller.dart';
+import '../widgets/reel_sources_sheet.dart';
 import 'package:mpx/core/theme/app_theme_tokens.dart';
 
 class ReelsScreen extends StatefulWidget {
@@ -36,11 +36,6 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        Provider.of<ReelsController>(context, listen: false).loadReels();
-      }
-    });
     Future<void>.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         setState(() => _showExitHint = false);
@@ -72,38 +67,15 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  Future<void> _importFolder() async {
-    final fileBrowserController =
-        Provider.of<FileBrowserController>(context, listen: false);
-    final reelsController =
-        Provider.of<ReelsController>(context, listen: false);
-
-    final currentPath = fileBrowserController.currentPath;
-
-    if (currentPath.isEmpty) {
-      _showSnackBar(context.tr('Please navigate to a folder first.'), Colors.orange);
-      return;
-    }
-
-    try {
-      await reelsController.importFolderToReels(currentPath);
-      _showSnackBar(context.tr('Folder imported to Reels!'), Colors.green);
-    } catch (e) {
-      _showSnackBar(context.tr('Failed to import folder: {value0}', {'value0': e}), Colors.red);
-    }
-  }
-
-  void _showSnackBar(String message, Color color) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: color,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
+  Future<void> _manageSources(ReelsController controller) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
+      child: ReelSourcesSheet(controller: controller),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -132,10 +104,14 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
         if (controller.error != null) {
           return Scaffold(
             body: Center(
-              child: Text(
-                context.tr('Error: {value0}', {'value0': controller.error}),
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(context.tr('Error: {value0}', {'value0': controller.error}),
+                    style: TextStyle(color: theme.colorScheme.error)),
+                if (!isCustomFolder) TextButton(onPressed: () => _manageSources(controller),
+                    child: Text(context.tr('Manage sources'))),
+                TextButton(onPressed: () => controller.loadReels(forceRefresh: true),
+                    child: Text(context.tr('Retry'))),
+              ]),
             ),
           );
         }
@@ -143,15 +119,14 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
         if (controller.reelsVideos.isEmpty) {
           return EmptyReelsView(
             isCustomFolder: isCustomFolder,
-            onImportFolder: isCustomFolder ? null : _importFolder,
-            reelsFolderPath: controller.reelsFolderPath,
+            onImportFolder: isCustomFolder ? null : () => _manageSources(controller),
           );
         }
 
         return Scaffold(
           backgroundColor: Colors.black,
           body: RefreshIndicator(
-            onRefresh: controller.loadReels,
+            onRefresh: () => controller.loadReels(forceRefresh: true),
             child: Stack(
               children: [
                 PageView.builder(
@@ -179,6 +154,11 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (!isCustomFolder) IconButton(
+                          tooltip: context.tr('Manage sources'),
+                          icon: const Icon(Icons.folder_open, color: Colors.white),
+                          onPressed: () => _manageSources(controller),
+                        ),
                         GestureDetector(
                           onTap: controller.cyclePlaybackSpeed,
                           child: Container(

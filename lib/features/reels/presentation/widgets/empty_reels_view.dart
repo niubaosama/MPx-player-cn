@@ -5,13 +5,11 @@ import 'package:mpx/core/theme/app_theme_tokens.dart';
 class EmptyReelsView extends StatelessWidget {
   final bool isCustomFolder;
   final VoidCallback? onImportFolder;
-  final String? reelsFolderPath;
 
   const EmptyReelsView({
     super.key,
     required this.isCustomFolder,
     this.onImportFolder,
-    this.reelsFolderPath,
   });
 
   @override
@@ -37,15 +35,11 @@ class EmptyReelsView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              context.tr('Navigate to a folder in Home and tap the import button, or add videos via the video details sheet.'),
+              context.tr('Add one or more folders, or add a video from its details. No files are copied.'),
               textAlign: TextAlign.center,
               style:
                   theme.textTheme.bodyMedium?.copyWith(color: theme.mutedText),
             ),
-            if (!isCustomFolder && reelsFolderPath != null) ...[
-              const SizedBox(height: 24),
-              _buildFolderPathBox(context, theme),
-            ],
             const SizedBox(height: 24),
             if (!isCustomFolder) _buildImportButton(context, theme),
           ],
@@ -54,45 +48,11 @@ class EmptyReelsView extends StatelessWidget {
     );
   }
 
-  Widget _buildFolderPathBox(BuildContext context, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: theme.elevatedSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.softBorder),
-      ),
-      child: Column(
-        children: [
-          Text(
-            context.tr('Or add/delete your own videos externally at:'),
-            style: TextStyle(
-                color: theme.strongText,
-                fontWeight: FontWeight.w600,
-                fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          SelectableText(
-            reelsFolderPath!,
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontFamily: 'monospace',
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildImportButton(BuildContext context, ThemeData theme) {
     return ElevatedButton.icon(
       onPressed: onImportFolder,
       icon: const Icon(Icons.folder_open_rounded),
-      label: Text(context.tr('Import Current Folder')),
+      label: Text(context.tr('Manage sources')),
       style: ElevatedButton.styleFrom(
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,

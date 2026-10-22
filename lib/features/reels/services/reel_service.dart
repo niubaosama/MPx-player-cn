@@ -1,174 +1,149 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/services/storage_path_service.dart';
-import '../../../core/services/permission_service.dart';
+import '../../library/domain/entities/file_item.dart';
 import '../../library/domain/entities/video_file.dart';
-import '../../library/domain/entities/file_item.dart'; // Import FileItem
+import '../../library/services/library_index_service.dart';
 
+class ReelSource {
+  final String path;
+  final bool isFolder;
+  final bool includeSubfolders;
+
+  const ReelSource({required this.path, this.isFolder = true,
+    this.includeSubfolders = true});
+
+  Map<String, Object> toJson() => {'path': path, 'isFolder': isFolder,
+    'includeSubfolders': includeSubfolders};
+
+  factory ReelSource.fromJson(Map<String, dynamic> json) => ReelSource(
+    path: p.normalize(json['path'] as String),
+    isFolder: json['isFolder'] as bool? ?? true,
+    includeSubfolders: json['includeSubfolders'] as bool? ?? true,
+  );
+}
+
+/// 短视频只保存来源引用；原文件和旧版视频副本均保持原位。
 class ReelService {
-  static const String _reelsFolderName = 'mpxReels';
-  static Directory? _reelsDirectory;
+  static final ReelService _instance = ReelService._internal();
+  factory ReelService() => _instance;
+  ReelService._internal() : _index = LibraryIndexService(),
+      _appDirectory = StoragePathService.getAppExternalDirectory;
 
-  // Initializes and returns the directory for mpxReels
-  static Future<Directory> _getReelsDirectory() async {
-    if (_reelsDirectory != null) {
-      return _reelsDirectory!;
+  ReelService.forTesting(this._index, this._appDirectory);
+
+  final LibraryIndexService _index;
+  final Future<Directory> Function() _appDirectory;
+  static const _sourcesKey = 'reels_sources_v1';
+  Future<void>? _initialization;
+  Future<void>? _pendingChange;
+
+  Future<void> _initializeSources() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(_sourcesKey)) return;
+    final appDir = await _appDirectory();
+    final candidates = <String>{p.join(appDir.path, 'mpxReels')};
+    final parts = p.split(appDir.path);
+    final android = parts.indexOf('Android');
+    if (android > 0) {
+      candidates.add(p.join(p.joinAll(parts.take(android)), 'Movies', 'mpxReels'));
     }
-
-    // Resolve correct user profile path (works for main, secure folder, work profiles)
-    final appExternalDir = await StoragePathService.getAppExternalDirectory();
-    // Extract user's base storage path (e.g /storage/emulated/[userId]/) by splitting off Android app directory
-    final userBasePath = appExternalDir.path.split(RegExp(r'Android'))[0];
-    final publicReelsPath = p.join(userBasePath, 'Movies', _reelsFolderName);
-
-    // Check if we have permission to access public storage
-    final hasManageStorage =
-        await PermissionService.checkManageExternalStorage();
-
-    Directory targetDir;
-    if (hasManageStorage) {
-      // Use public Movies/mpxReels path when permission is granted
-      targetDir = Directory(publicReelsPath);
-    } else {
-      // Fallback to app-specific directory to avoid breaking the app
-      targetDir = Directory(p.join(appExternalDir.path, _reelsFolderName));
+    final sources = <ReelSource>[];
+    for (final path in candidates) {
+      if (await Directory(path).exists()) sources.add(ReelSource(path: path));
     }
-
-    if (!await targetDir.exists()) {
-      try {
-        await targetDir.create(recursive: true);
-      } catch (e) {
-        // If public path creation fails, fallback to app-specific directory
-        if (targetDir.path == publicReelsPath) {
-          targetDir = Directory(p.join(appExternalDir.path, _reelsFolderName));
-          if (!await targetDir.exists()) {
-            await targetDir.create(recursive: true);
-          }
-        } else {
-          rethrow;
-        }
-      }
-    }
-
-    _reelsDirectory = targetDir;
-    return targetDir;
+    await _save(sources);
   }
 
-  // Returns the path of the Reels folder for user display
-  static Future<String> getReelsFolderPath() async {
-    final reelsDir = await _getReelsDirectory();
-    return reelsDir.path;
+  Future<List<ReelSource>> getSources() async {
+    await (_initialization ??= _initializeSources());
+    final prefs = await SharedPreferences.getInstance();
+    final rows = jsonDecode(prefs.getString(_sourcesKey) ?? '[]') as List;
+    return rows.map((row) => ReelSource.fromJson(Map<String, dynamic>.from(row as Map))).toList();
   }
 
-  // Imports video files from a source folder to the mpxReels directory
-  static Future<void> importFolder(String sourcePath) async {
-    final reelsDir = await _getReelsDirectory();
-    final sourceDir = Directory(sourcePath);
+  Future<void> _save(List<ReelSource> sources) async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = await prefs.setString(_sourcesKey,
+        jsonEncode(sources.map((source) => source.toJson()).toList()));
+    if (!saved) throw StateError('Failed to save Reels sources');
+  }
 
-    if (!await sourceDir.exists()) {
-      throw Exception('Source directory does not exist: $sourcePath');
-    }
-
-    await for (final entity
-        in sourceDir.list(recursive: false, followLinks: false)) {
-      if (entity is File) {
-        // Use FileItem.isVideoFileName to check if it's a video
-        if (FileItem.isVideoFileName(p.basename(entity.path))) {
-          final newPath = p.join(reelsDir.path, p.basename(entity.path));
-          // Copy the file, if a file with the same name exists, it will be overwritten
-          await entity.copy(newPath);
-        }
-      }
+  Future<void> _change(List<ReelSource> Function(List<ReelSource>) update) async {
+    final previous = _pendingChange;
+    final completed = Completer<void>();
+    _pendingChange = completed.future;
+    try {
+      if (previous != null) await previous;
+      await _save(update(await getSources()));
+    } finally {
+      completed.complete();
+      if (identical(_pendingChange, completed.future)) _pendingChange = null;
     }
   }
 
-  // Imports a single video file to the mpxReels directory
-  static Future<void> importVideoFile(String filePath) async {
-    final reelsDir = await _getReelsDirectory();
-    final file = File(filePath);
-
-    if (!await file.exists()) {
-      throw Exception('File does not exist: $filePath');
-    }
-
-    if (FileItem.isVideoFileName(p.basename(file.path))) {
-      final newPath = p.join(reelsDir.path, p.basename(file.path));
-      await file.copy(newPath);
-    } else {
-      throw Exception('Not a valid video file: $filePath');
-    }
+  Future<void> importFolder(String path, {bool includeSubfolders = true}) async {
+    path = p.normalize(p.absolute(path));
+    if (!await Directory(path).exists()) throw FileSystemException('Folder not found', path);
+    // 校验访问权限，不复制文件，也不创建目标目录。
+    await Directory(path).list(followLinks: false).take(1).drain<void>();
+    final source = ReelSource(path: path, includeSubfolders: includeSubfolders);
+    await _change((sources) => [
+      ...sources.where((item) => item.path != source.path), source,
+    ]);
   }
 
-  // Returns a list of VideoFile objects from ANY specified directory
-  static Future<List<VideoFile>> getVideosFromAnyFolder(String path) async {
-    final dir = Directory(path);
-    final List<VideoFile> videos = [];
-
-    if (!await dir.exists()) {
-      return videos;
-    }
-
-    final folderPath = dir.path;
-    final folderName = p.basename(dir.path);
-
-    await for (final entity in dir.list(recursive: false, followLinks: false)) {
-      if (entity is File) {
-        // Use FileItem.isVideoFileName to check if it's a video
-        if (FileItem.isVideoFileName(p.basename(entity.path))) {
-          final stat = await entity.stat();
-          videos.add(
-            VideoFile(
-              id: p.basename(entity.path), // Use filename as ID for simplicity
-              path: entity.path,
-              title: p.basenameWithoutExtension(entity.path),
-              folderPath: folderPath, // Corrected parameter
-              folderName: folderName, // Corrected parameter
-              size: stat.size,
-              duration:
-                  0, // Default to 0, actual duration will be fetched by player
-              dateAdded: stat.changed, // Using stat.changed as dateAdded
-            ),
-          );
-        }
-      }
-    }
-    return videos;
+  Future<void> importVideoFile(String path) async {
+    path = p.normalize(p.absolute(path));
+    if (!await File(path).exists()) throw FileSystemException('Video not found', path);
+    if (!FileItem.isVideoFileName(p.basename(path))) throw ArgumentError('Not a video file');
+    final source = ReelSource(path: path, isFolder: false);
+    await _change((sources) => [
+      ...sources.where((item) => item.path != source.path), source,
+    ]);
   }
 
-  // Returns a list of VideoFile objects from the mpxReels directory
-  static Future<List<VideoFile>> getReelsVideos() async {
-    final reelsDir = await _getReelsDirectory();
-    final List<VideoFile> videos = [];
+  Future<void> removeSource(String path) =>
+      _change((sources) => sources.where((item) => item.path != path).toList());
 
-    if (!await reelsDir.exists()) {
-      return videos;
+  Future<void> setIncludeSubfolders(String path, bool enabled) => _change((sources) =>
+    sources.map((item) => item.path == path ? ReelSource(path: path,
+        isFolder: item.isFolder, includeSubfolders: enabled) : item).toList());
+
+  Future<List<VideoFile>> getVideosFromAnyFolder(String path,
+      {bool includeSubfolders = true, bool forceRefresh = false}) =>
+      _index.getVideosInFolder(path, includeSubfolders: includeSubfolders,
+          forceRefresh: forceRefresh);
+
+  Future<List<VideoFile>> getReelsVideos({bool forceRefresh = false}) async {
+    final sources = await getSources();
+    final videos = <String, VideoFile>{};
+    // 先查询父目录，子目录来源随后可复用同一索引。
+    final folders = sources.where((source) => source.isFolder).toList()
+      ..sort((a, b) => a.path.length.compareTo(b.path.length));
+    final refreshedRoots = <String>[];
+    for (final source in folders) {
+      if (!await Directory(source.path).exists()) continue;
+      final refresh = forceRefresh && !refreshedRoots.any((root) =>
+          root == source.path || p.isWithin(root, source.path));
+      final found = await getVideosFromAnyFolder(source.path,
+          includeSubfolders: source.includeSubfolders, forceRefresh: refresh);
+      if (refresh) refreshedRoots.add(source.path);
+      for (final video in found) { videos[video.path] = video; }
     }
-
-    final folderPath = reelsDir.path;
-    final folderName = p.basename(reelsDir.path);
-
-    await for (final entity
-        in reelsDir.list(recursive: false, followLinks: false)) {
-      if (entity is File) {
-        // Use FileItem.isVideoFileName to check if it's a video
-        if (FileItem.isVideoFileName(p.basename(entity.path))) {
-          final stat = await entity.stat();
-          videos.add(
-            VideoFile(
-              id: p.basename(entity.path), // Use filename as ID for simplicity
-              path: entity.path,
-              title: p.basenameWithoutExtension(entity.path),
-              folderPath: folderPath, // Corrected parameter
-              folderName: folderName, // Corrected parameter
-              size: stat.size,
-              duration:
-                  0, // Default to 0, actual duration will be fetched by player
-              dateAdded: stat.changed, // Using stat.changed as dateAdded
-            ),
-          );
-        }
-      }
+    for (final source in sources.where((source) => !source.isFolder)) {
+      final file = File(source.path);
+      if (!await file.exists()) continue;
+      final stat = await file.stat();
+      videos[source.path] = VideoFile.fromFileItem(FileItem(path: source.path,
+          name: p.basename(source.path), isDirectory: false, size: stat.size,
+          modified: stat.modified), p.dirname(source.path));
     }
-    return videos;
+    return videos.values.toList();
   }
 }
