@@ -86,7 +86,7 @@ jobs:
 
       # 云端先生成构建产物，下载后使用仅保存在本机的固定私有密钥签名。
       # 分批修改先运行检查；最终提交带 [build-apk] 时生成安装包。
-      - name: 编译 ARM64 测试包
+      - name: 编译 ARM64 待签名包
         if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-apk]')
         run: flutter build apk --release --target-platform android-arm64
 
@@ -100,7 +100,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-apk]')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: MPx-player-cn-arm64-test
+          name: MPx-player-cn-arm64-unsigned
           path: |
             build/app/outputs/flutter-apk/app-release.apk
             build/signing-tools/apksigner.jar

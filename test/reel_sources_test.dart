@@ -31,6 +31,19 @@ void main() {
     return file.writeAsString(contents);
   }
 
+  test('本机模式直接复用存储卷索引，不添加来源或复制视频', () async {
+    final publicRoot = p.join(root.path, 'profile');
+    final first = await video('profile/Movies/a.mp4', 'first');
+    final second = await video('profile/DCIM/sub/b.mp4', 'second');
+    final localService = ReelService.forTesting(index, () async =>
+      Directory(p.join(publicRoot, 'Android', 'data', 'com.example.mpx', 'files')));
+    final videos = await localService.getLocalVideos();
+    expect(videos.map((v) => v.path), unorderedEquals([first.path, second.path]));
+    expect(await Directory(p.join(publicRoot, 'Android')).exists(), isFalse);
+    expect(await first.readAsString(), 'first');
+    expect(await second.readAsString(), 'second');
+  });
+
   test('添加多个文件夹不复制视频，同名文件分别保留', () async {
     final first = await video('one/same.mp4', 'first');
     final second = await video('two/same.mp4', 'second');

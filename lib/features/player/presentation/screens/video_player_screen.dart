@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:simple_pip_mode/actions/pip_action.dart';
 import 'package:simple_pip_mode/actions/pip_actions_layout.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
@@ -54,6 +53,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     with WidgetsBindingObserver {
   bool _isInPipMode = false;
   PlayerController? _controller;
+  String? _loadError;
+  bool _loading = false;
 
   @override
   void initState() {
@@ -74,18 +75,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      if (_isInPipMode) return;
+      if (_isInPipMode) { return; }
       _controller?.pauseVideo();
       _controller?.savePositionOnBackground();
     }
   }
 
   Future<void> _loadInitial(PlayerController controller) async {
-    await controller.loadVideoFile(widget.video);
-    if (!mounted || controller.playbackDisposed) return;
-    if (widget.initialPosition != null) controller.seek(widget.initialPosition!);
-    if (widget.initialPlaybackSpeed != null) controller.setSpeed(widget.initialPlaybackSpeed!);
-    if (widget.initiallyPaused) controller.pauseVideo();
+    if (_loading) return;
+    _loading = true;
+    try {
+      await controller.loadVideoFile(widget.video);
+      if (!mounted || controller.playbackDisposed) return;
+      if (widget.initialPosition != null) { controller.seek(widget.initialPosition!); }
+      if (widget.initialPlaybackSpeed != null) { controller.setSpeed(widget.initialPlaybackSpeed!); }
+      if (widget.initiallyPaused) controller.pauseVideo();
+    } catch (error) {
+      if (mounted) setState(() => _loadError = error.toString());
+    } finally { _loading = false; }
   }
 
   @override
@@ -97,12 +104,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         final repository = MpvPlayerRepository(autoPlay: !widget.initiallyPaused);
         final controller = PlayerController(repository);
         _controller = controller;
+        controller.trackPlaybackSubscription(repository.player.stream.error.listen((error) {
+          if (mounted && error.isNotEmpty) setState(() => _loadError = error);
+        }));
         _loadInitial(controller);
-        WakelockPlus.enable();
         controller.startHideTimer();
         return controller;
       },
-      child: _VideoPlayerScreenContent(
+      child: Stack(fit: StackFit.expand, children: [
+      _VideoPlayerScreenContent(
         video: widget.video,
         playlist: widget.playlist,
         initialPlaylistIndex: widget.initialPlaylistIndex ?? 0,
@@ -111,6 +121,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         skipHistoryResume: widget.initialPosition != null,
         returnPlaybackState: widget.returnPlaybackState,
       ),
+      if (_loadError != null) Center(child: Material(color: Colors.black87,
+        borderRadius: BorderRadius.circular(16), child: Padding(padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(context.tr('Unable to play this video'), style: const TextStyle(color: Colors.white)),
+            const SizedBox(height: 8),
+            Text(_loadError!, maxLines: 3, style: const TextStyle(color: Colors.white60)),
+            TextButton(onPressed: () {
+              setState(() => _loadError = null);
+              final controller = _controller;
+              if (controller != null) _loadInitial(controller);
+            }, child: Text(context.tr('Retry'))),
+          ])))),
+      ]),
     );
   }
 }
@@ -164,15 +187,15 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     // Check for auto-resume after a short delay to ensure video is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !widget.skipHistoryResume) _checkAndResumePlayback();
-      if (!mounted) return;
+      if (mounted && !widget.skipHistoryResume) { _checkAndResumePlayback(); }
+      if (!mounted) { return; }
       _recordVideoInHistory();
       _initPip();
     });
   }
 
   void _initPip() {
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid) { return; }
     setState(() => _showPipButton = true);
   }
 
@@ -185,7 +208,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
   Future<void> _recordVideoInHistory() async {
     final existing = await HistoryService.getHistoryEntry(widget.video.id);
-    if (existing != null) return;
+    if (existing != null) { return; }
     await HistoryService.recordPlayback(
       video: widget.video,
       position: Duration.zero,
@@ -254,7 +277,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, Object? result) {
-        if (!didPop) _leavePlayer();
+        if (!didPop) { _leavePlayer(); }
       },
       child: PipWidget(
         pipLayout: PipActionsLayout.media,
@@ -342,7 +365,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     speed: controller.playbackSpeed, paused: !controller.isPlaying);
 
   Future<void> _leavePlayer() async {
-    if (_leaving) return;
+    if (_leaving) { return; }
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
@@ -350,11 +373,11 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    if (mounted) Navigator.of(context).pop(widget.returnPlaybackState ? playback : null);
+    if (mounted) { Navigator.of(context).pop(widget.returnPlaybackState ? playback : null); }
   }
 
   Future<void> _switchToReels() async {
-    if (_leaving) return;
+    if (_leaving) { return; }
     _leaving = true;
     final controller = context.read<PlayerController>();
     final playback = _transfer(controller);
@@ -362,7 +385,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     await controller.saveAndCleanup();
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    if (!mounted) return;
+    if (!mounted) { return; }
     Navigator.of(context).pushReplacement(MaterialPageRoute<PlaybackTransfer>(
       builder: (_) => ReelsScreen(initialPlayback: playback)));
   }
@@ -444,7 +467,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     setState(() => _overlayMessage = message);
     _messageTimer?.cancel();
     _messageTimer = Timer(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _overlayMessage = null);
+      if (mounted) setState(() { => _overlayMessage = null); }
     });
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
@@ -32,6 +33,7 @@ class ThumbnailMemoryCache {
   }
 
   void put(String videoPath, Uint8List data) {
+    if (data.length > _maxMemoryBytes) return;
     final existingEntry = _cache.remove(videoPath);
     if (existingEntry != null) {
       _currentMemoryUsage -= existingEntry.data.length;
@@ -90,6 +92,7 @@ class ThumbnailDiskCache {
   static const int _maxCacheAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 
   String? _cacheDir;
+  Future<void>? _cleanupFuture;
 
   Future<String> get _directory async {
     if (_cacheDir != null) return _cacheDir!;
@@ -181,7 +184,11 @@ class ThumbnailDiskCache {
     }
   }
 
-  Future<void> cleanup() async {
+  Future<void> cleanup() {
+    return _cleanupFuture ??= _cleanup().whenComplete(() { _cleanupFuture = null; });
+  }
+
+  Future<void> _cleanup() async {
     try {
       final currentSize = await getCacheSize();
       if (currentSize <= _maxCacheSizeBytes) {
@@ -262,12 +269,22 @@ class ThumbnailCache {
 
   final memoryCache = ThumbnailMemoryCache();
   final diskCache = ThumbnailDiskCache();
+  int _writesSinceCleanup = 0;
+
+  /// 每批缩略图生成后执行有上限的清理，长时间使用也不会持续堆积缓存。
+  void onThumbnailWritten() {
+    if (++_writesSinceCleanup < 32) return;
+    _writesSinceCleanup = 0;
+    unawaited(diskCache.cleanup());
+  }
 
   Future<String?> get(String videoPath) async {
     final memoryData = memoryCache.get(videoPath);
     if (memoryData != null) {
       final dir = await diskCache._directory;
-      return '$dir/${videoPath.hashCode.abs()}.jpg';
+      final file = File('$dir/${videoPath.hashCode.abs()}.jpg');
+      if (await file.exists()) return file.path;
+      memoryCache.remove(videoPath);
     }
 
     return await diskCache.get(videoPath);

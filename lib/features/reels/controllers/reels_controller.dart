@@ -28,6 +28,7 @@ class ReelsController extends ChangeNotifier {
   final Map<String, Duration> _positions = {};
   final Map<ReelsSourceMode, List<VideoFile>> _modeQueues = {};
   final Map<ReelsSourceMode, String?> _modeCurrentPaths = {};
+  final Map<ReelsSourceMode, ReelsSortOrder> _modeSortOrders = {};
 
   List<VideoFile> get reelsVideos => List.unmodifiable(_reelsVideos);
   bool get isLoading => _isLoading;
@@ -52,7 +53,7 @@ class ReelsController extends ChangeNotifier {
     if (initialVideos != null && initialVideos.isNotEmpty) {
       _reelsVideos = List.of(initialVideos);
       _selectPath(initialVideoPath);
-      if (initialVideoPath != null) _positions[initialVideoPath] = initialPosition;
+      if (initialVideoPath != null) { _positions[initialVideoPath] = initialPosition; }
       initialized = Future.value();
     } else {
       initialized = _initialize();
@@ -61,7 +62,7 @@ class ReelsController extends ChangeNotifier {
 
   Future<void> _initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    if (_disposed) return;
+    if (_disposed) { return; }
     if (targetFolderPath == null && prefs.getString('reels_source_mode') == ReelsSourceMode.localRandom.name) {
       _sourceMode = ReelsSourceMode.localRandom;
       _sortOrder = ReelsSortOrder.shuffle;
@@ -70,7 +71,7 @@ class ReelsController extends ChangeNotifier {
   }
 
   Future<void> loadReels({bool forceRefresh = false}) {
-    if (_loadFuture != null) return _loadFuture!;
+    if (_loadFuture != null) { return _loadFuture!; }
     final future = _loadReels(forceRefresh);
     _loadFuture = future;
     return future;
@@ -87,14 +88,14 @@ class ReelsController extends ChangeNotifier {
           : _sourceMode == ReelsSourceMode.localRandom
             ? await _service.getLocalVideos(forceRefresh: forceRefresh)
             : await _service.getReelsVideos(forceRefresh: forceRefresh);
-      if (_disposed) return;
+      if (_disposed) { return; }
       final byPath = {for (final video in found) video.path: video};
       // 刷新只合并新增和移除，不打乱正在观看的会话。
       final previous = _reelsVideos.where((video) => byPath.containsKey(video.path)).toList();
       final previousPaths = previous.map((video) => video.path).toSet();
       final added = found.where((video) => !previousPaths.contains(video.path)).toList();
       _reelsVideos = [...previous.map((video) => byPath[video.path]!), ...added];
-      if (previous.isEmpty) _applySort();
+      if (previous.isEmpty) { _applySort(); }
       _selectPath(currentPath);
       _queueRevision++;
     } catch (e) {
@@ -111,12 +112,12 @@ class ReelsController extends ChangeNotifier {
   }
   void _notify() { if (!_disposed) notifyListeners(); }
   void selectIndex(int index) {
-    if (index < 0 || index >= _reelsVideos.length || index == _currentIndex) return;
+    if (index < 0 || index >= _reelsVideos.length || index == _currentIndex) { return; }
     _currentIndex = index;
     _notify();
   }
   void rememberPosition(String path, Duration position) {
-    if (position >= Duration.zero) _positions[path] = position;
+    if (position >= Duration.zero) { _positions[path] = position; }
   }
   void selectVideo(String path, Duration position, double speed, bool paused) {
     _selectPath(path);
@@ -127,12 +128,13 @@ class ReelsController extends ChangeNotifier {
     _notify();
   }
   Future<void> setSourceMode(ReelsSourceMode mode) async {
-    if (mode == _sourceMode || targetFolderPath != null) return;
-    if (_loadFuture != null) await _loadFuture;
+    if (mode == _sourceMode || targetFolderPath != null) { return; }
+    if (_loadFuture != null) { await _loadFuture; }
     _modeQueues[_sourceMode] = List.of(_reelsVideos);
     _modeCurrentPaths[_sourceMode] = currentVideo?.path;
+    _modeSortOrders[_sourceMode] = _sortOrder;
     _sourceMode = mode;
-    _sortOrder = mode == ReelsSourceMode.localRandom ? ReelsSortOrder.shuffle : ReelsSortOrder.dateDesc;
+    _sortOrder = _modeSortOrders[mode] ?? (mode == ReelsSourceMode.localRandom ? ReelsSortOrder.shuffle : ReelsSortOrder.dateDesc);
     _reelsVideos = List.of(_modeQueues[mode] ?? []);
     _selectPath(_modeCurrentPaths[mode]);
     _queueRevision++;
@@ -167,8 +169,8 @@ class ReelsController extends ChangeNotifier {
   void setPlaybackSpeed(double speed) { _playbackSpeed = speed; _notify(); }
   void resetPlaybackSpeed() => setPlaybackSpeed(1);
   Future<void> _changeSources(Future<void> Function() change) async {
-    if (targetFolderPath != null) return;
-    if (_loadFuture != null) await _loadFuture;
+    if (targetFolderPath != null) { return; }
+    if (_loadFuture != null) { await _loadFuture; }
     await change();
     await loadReels();
   }

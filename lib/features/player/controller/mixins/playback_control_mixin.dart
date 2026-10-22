@@ -20,12 +20,14 @@ mixin PlaybackControlMixin on ChangeNotifier, PlayerLifetimeMixin {
     registerControlsInteraction();
 
     if (state.isPlaying) {
+      state.isPlaying = false;
       repository.pause();
       state.showControls = true;
       cancelHideTimer();
       notifyListeners();
       onPause();
     } else {
+      state.isPlaying = true;
       repository.play();
       showControlsNow();
     }

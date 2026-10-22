@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">MPx 中文版</string>
     <string name="quality_auto">自动</string>
     <string name="quality_audio_only">仅音频</string>
     <string name="permission_denied">未获得权限</string>

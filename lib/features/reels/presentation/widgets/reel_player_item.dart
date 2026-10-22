@@ -1,3 +1,4 @@
+import 'package:flutter_mpv/flutter_mpv.dart' show PlaylistMode;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/l10n/app_localizations.dart';
@@ -36,33 +37,37 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
     _controller = PlayerController(_repository);
     _controller.addListener(_rememberPosition);
     _controller.trackPlaybackSubscription(_repository.player.stream.error.listen((error) {
-      if (mounted && error.isNotEmpty) setState(() => _error = error);
+      if (mounted && error.isNotEmpty) setState(() { => _error = error); }
     }));
     _initialize();
   }
-  void _rememberPosition() => widget.onPosition(_controller.position);
+  void _rememberPosition() {
+    if (_ready) { widget.onPosition(_controller.position); }
+  }
   Future<void> _initialize() async {
     try {
+      await _repository.player.setPlaylistMode(PlaylistMode.single);
+      if (!mounted) { return; }
       await _controller.loadVideoFile(widget.video);
-      if (!mounted) return;
+      if (!mounted) { return; }
       if (widget.initialPosition > Duration.zero) {
         await _repository.seek(widget.initialPosition);
         _controller.state.position = widget.initialPosition;
       }
-      if (!mounted) return;
+      if (!mounted) { return; }
       _ready = true;
       await _syncPlayback();
       if (mounted) setState(() {});
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) setState(() { => _error = e.toString()); }
     }
   }
   Future<void> _syncPlayback() async {
-    if (!_ready || !mounted) return;
+    if (!_ready || !mounted) { return; }
     await _repository.setSpeed(_longPressing ? 2 : widget.playbackSpeed);
-    if (!mounted) return;
+    if (!mounted) { return; }
     await _repository.setVolume(widget.isMuted ? 0 : 100);
-    if (!mounted) return;
+    if (!mounted) { return; }
     if (widget.isPaused || _seeking) {
       await _repository.pause();
     } else {
@@ -73,16 +78,16 @@ class _ReelPlayerItemState extends State<ReelPlayerItem> {
   void didUpdateWidget(ReelPlayerItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isPaused != oldWidget.isPaused || widget.isMuted != oldWidget.isMuted ||
-        widget.playbackSpeed != oldWidget.playbackSpeed) _syncPlayback();
+        widget.playbackSpeed != oldWidget.playbackSpeed) { _syncPlayback(); }
   }
   void _endLongPress() {
-    if (!_longPressing) return;
+    if (!_longPressing) { return; }
     setState(() => _longPressing = false);
     _syncPlayback();
   }
   @override
   void dispose() {
-    widget.onPosition(_controller.position);
+    if (_ready) { widget.onPosition(_controller.position); }
     _controller.removeListener(_rememberPosition);
     unawaited(_controller.saveCurrentPosition(force: true));
     _controller.dispose();

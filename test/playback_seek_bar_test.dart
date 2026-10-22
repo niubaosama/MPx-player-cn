@@ -26,9 +26,9 @@ void main() {
     expect(finalValue, inInclusiveRange(0, 100000));
   });
   testWidgets('unknown duration disables seeking', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: PlaybackSeekBar(position: Duration.zero,
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: PlaybackSeekBar(position: Duration.zero,
       duration: Duration.zero, onSeekStart: () => fail('disabled'),
-      onSeekChanged: (_) => fail('disabled'), onSeekEnd: (_) => fail('disabled'))));
+      onSeekChanged: (_) => fail('disabled'), onSeekEnd: (_) => fail('disabled')))));
     expect(tester.widget<Slider>(find.byType(Slider)).onChanged, isNull);
   });
   test('long videos retain hours in the shared time format', () {

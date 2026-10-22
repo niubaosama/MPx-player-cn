@@ -48,7 +48,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
   void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (mounted) setState(() => _appActive = state == AppLifecycleState.resumed);
+    if (mounted) setState(() { => _appActive = state == AppLifecycleState.resumed); }
   }
   @override
   void dispose() { WidgetsBinding.instance.removeObserver(this); _pages?.dispose(); super.dispose(); }
@@ -58,7 +58,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
       speed: controller.playbackSpeed, paused: controller.isPaused);
   Future<void> _openNormal(ReelsController controller) async {
     final playback = _transfer(controller);
-    if (playback == null) return;
+    if (playback == null) { return; }
     final route = MaterialPageRoute<PlaybackTransfer>(builder: (_) => VideoPlayerScreen(
       video: playback.video, playlist: playback.videos, initialPlaylistIndex: playback.index,
       initialPosition: playback.position, initialPlaybackSpeed: playback.speed,
@@ -68,8 +68,8 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     } else {
       setState(() => _routeCovered = true);
       final result = await Navigator.of(context).push(route);
-      if (!mounted) return;
-      if (result != null) controller.selectVideo(result.video.path, result.position, result.speed, result.paused);
+      if (!mounted) { return; }
+      if (result != null) { controller.selectVideo(result.video.path, result.position, result.speed, result.paused); }
       setState(() => _routeCovered = false);
     }
   }
@@ -78,7 +78,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true,
       builder: (_) => ConstrainedBox(constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .85),
         child: ReelSourcesSheet(controller: controller)));
-    if (mounted) setState(() => _routeCovered = false);
+    if (mounted) setState(() { => _routeCovered = false); }
   }
   @override
   Widget build(BuildContext context) {
@@ -91,7 +91,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
     }
     return PopScope<PlaybackTransfer>(canPop: !widget.standalone,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && widget.standalone) Navigator.of(context).pop(_transfer(controller));
+        if (!didPop && widget.standalone) { Navigator.of(context).pop(_transfer(controller)); }
       },
       child: Scaffold(backgroundColor: Colors.black, body: Stack(children: [
         if (controller.reelsVideos.isNotEmpty) PageView.builder(
@@ -100,7 +100,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
           itemCount: controller.reelsVideos.length,
           itemBuilder: (context, index) {
             final video = controller.reelsVideos[index];
-            if (!_active || index != controller.currentIndex) return const SizedBox.expand();
+            if (!_active || index != controller.currentIndex) { return const SizedBox.expand(); }
             return ReelPlayerItem(key: ValueKey(video.path), video: video,
               initialPosition: controller.positionFor(video.path),
               playbackSpeed: controller.playbackSpeed, isPaused: controller.isPaused,
@@ -124,7 +124,7 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
             if (widget.standalone) IconButton(onPressed: () => Navigator.of(context).pop(_transfer(controller)),
               icon: const Icon(Icons.arrow_back, color: Colors.white))
             else PopupMenuButton<ReelsSourceMode>(
-              initialValue: controller.sourceMode,
+              initialValue: controller.sourceMode, enabled: !controller.isLoading,
               tooltip: context.tr('Video source'),
               onSelected: controller.setSourceMode,
               icon: const Icon(Icons.video_library_outlined, color: Colors.white),
@@ -144,7 +144,8 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
               icon: Icon(controller.isMuted ? Icons.volume_off : Icons.volume_up, color: Colors.white)),
             TextButton(onPressed: controller.cyclePlaybackSpeed,
               child: Text('${controller.playbackSpeed}×', style: const TextStyle(color: Colors.white))),
-            ReelsSortMenu(onSortSelected: controller.changeSortOrder, theme: Theme.of(context)),
+            ReelsSortMenu(onSortSelected: controller.changeSortOrder, theme: Theme.of(context),
+              onRefresh: () => controller.loadReels(forceRefresh: true)),
           ]))),
         if (controller.isLoading && controller.reelsVideos.isNotEmpty)
           const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator()),

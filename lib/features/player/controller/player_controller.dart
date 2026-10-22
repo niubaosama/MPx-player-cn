@@ -1,6 +1,7 @@
 import 'mixins/player_lifetime_mixin.dart';
 import 'dart:async';
-import 'dart:io' as dartIo;
+import 'dart:io' as dart_io;
+import 'package:path/path.dart' as path;
 import 'dart:ui' show Color, FontWeight;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_mpv_video/flutter_mpv_video.dart';
@@ -11,7 +12,7 @@ import 'package:mpx/features/player/controller/mixins/gesture_coordinator_mixin.
 import 'package:mpx/features/player/presentation/widgets/gesture_layer.dart'
     show SeekDirection;
 import 'package:mpx/features/settings/services/app_settings_service.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
+import 'utils/playback_wakelock.dart';
 import '../../../core/services/logger_service.dart';
 import '../../history/services/history_service.dart';
 import '../../library/domain/entities/video_file.dart';
@@ -190,6 +191,7 @@ class PlayerController extends ChangeNotifier
   void _setupListeners() {
     trackPlaybackSubscription(_repository.playingStream.listen((playing) {
       _state.isPlaying = playing;
+      unawaited(PlaybackWakelock.setActive(this, playing));
       notifyListeners();
     }));
 
@@ -249,9 +251,9 @@ class PlayerController extends ChangeNotifier
     loadSubtitleTracks();
     await applySubtitleSettings();
     if (playbackDisposed || _currentVideo != video) return;
-    await _loadSidecarSubtitles();
+    await _loadSidecarSubtitles(video);
     if (playbackDisposed || _currentVideo != video) return;
-    await _loadPersistedSubtitles();
+    await _loadPersistedSubtitles(video);
     if (playbackDisposed || _currentVideo != video) return;
     await loadSubtitleTracksWithRestore(video: video);
     if (playbackDisposed || _currentVideo != video) return;
@@ -260,113 +262,58 @@ class PlayerController extends ChangeNotifier
     _startAutoSaveTimer();
   }
 
-  Future<void> _loadSidecarSubtitles() async {
-    if (_currentVideo == null) return;
-    final videoPath = _currentVideo!.path;
-    final dir = videoPath.substring(0, videoPath.lastIndexOf('/'));
-    final baseName = videoPath.split('/').last;
-    final dotIndex = baseName.lastIndexOf('.');
-    final nameWithoutExt =
-        dotIndex > 0 ? baseName.substring(0, dotIndex) : baseName;
-    const extensions = ['.srt', '.ass', '.ssa', '.sub', '.vtt', '.idx', '.smi'];
-    final exactMatches = <String>[];
-    final anyMatches = <String>[];
-    for (final ext in extensions) {
-      final exactPath = '$dir/$nameWithoutExt$ext';
-      if (await _fileExists(exactPath)) {
-        exactMatches.add(exactPath);
-      }
-    }
+  bool _isCurrentVideo(VideoFile video) => !playbackDisposed && identical(_currentVideo, video);
+
+  Future<void> _loadSidecarSubtitles(VideoFile video) async {
+    final directory = dart_io.Directory(path.dirname(video.path));
+    final base = path.basenameWithoutExtension(video.path).toLowerCase();
+    const extensions = {'.srt', '.ass', '.ssa', '.sub', '.vtt', '.idx', '.smi'};
+    final subtitlePaths = <String>[];
     try {
-      final dirContents = await dartIo.Directory(dir).list().toList();
-    if (playbackDisposed) return;
-      for (final entity in dirContents) {
-        if (entity is dartIo.File) {
-          final lowerPath = entity.path.toLowerCase();
-          final lowerName = nameWithoutExt.toLowerCase();
-          for (final ext in extensions) {
-            if (lowerPath.endsWith(ext)) {
-              if (!exactMatches.contains(entity.path)) {
-                final fileName = entity.path.split('/').last;
-                final fileBase =
-                    fileName.substring(0, fileName.lastIndexOf('.'));
-                if (fileBase.toLowerCase().startsWith(lowerName)) {
-                  anyMatches.add(entity.path);
-                }
-              }
-              break;
-            }
-          }
+      await for (final entity in directory.list(followLinks: false)) {
+        if (!_isCurrentVideo(video)) return;
+        if (entity is dart_io.File && extensions.contains(path.extension(entity.path).toLowerCase()) &&
+            path.basenameWithoutExtension(entity.path).toLowerCase().startsWith(base)) {
+          subtitlePaths.add(entity.path);
         }
       }
-    } catch (_) {}
-    final allSubPaths = [...exactMatches, ...anyMatches];
-    for (final subPath in allSubPaths) {
-      if (playbackDisposed) return;
+    } on dart_io.FileSystemException catch (error) {
+      AppLogger.w('Unable to inspect sidecar subtitles: $error');
+    }
+    for (final subtitlePath in subtitlePaths) {
+      if (!_isCurrentVideo(video)) return;
       try {
-        await _repository.loadExternalSubtitle(subPath);
-    if (playbackDisposed) return;
-        AppLogger.d('Loaded sidecar subtitle: $subPath');
-      } catch (e) {
-        AppLogger.e('Failed to load sidecar subtitle: $subPath, error: $e');
+        await _repository.loadExternalSubtitle(subtitlePath);
+      } catch (error) {
+        if (!_isCurrentVideo(video)) return;
+        AppLogger.w('Unable to load sidecar subtitle: $error');
       }
     }
-    if (allSubPaths.isNotEmpty) {
-      await _persistSubtitlePaths(allSubPaths);
-    if (playbackDisposed) return;
+    if (!_isCurrentVideo(video)) return;
+    if (subtitlePaths.isNotEmpty) {
+      final existing = await HistoryService.getSubtitlePaths(video.id);
+      if (!_isCurrentVideo(video)) return;
+      await HistoryService.saveSubtitlePaths(video.id, {...existing, ...subtitlePaths}.toList());
+      if (!_isCurrentVideo(video)) return;
     }
-    if (playbackDisposed) return;
     loadSubtitleTracks();
-    AppLogger.d(
-        'Total subtitle tracks after sidecar load: ${state.subtitleTracks.length}');
-    notifyListeners();
   }
 
-  Future<void> _loadPersistedSubtitles() async {
-    if (_currentVideo == null) return;
-    try {
-      final paths = await HistoryService.getSubtitlePaths(_currentVideo!.id);
-    if (playbackDisposed) return;
-      AppLogger.d('Persisted subtitle paths for ${_currentVideo!.id}: $paths');
-      for (final path in paths) {
-        if (await _fileExists(path)) {
-          try {
-            await _repository.loadExternalSubtitle(path);
-    if (playbackDisposed) return;
-            AppLogger.d('Loaded persisted subtitle: $path');
-          } catch (e) {
-            AppLogger.e('Failed to load persisted subtitle: $path, error: $e');
-          }
-        } else {
-          AppLogger.w('Persisted subtitle file not found: $path');
-        }
+  Future<void> _loadPersistedSubtitles(VideoFile video) async {
+    final paths = await HistoryService.getSubtitlePaths(video.id);
+    if (!_isCurrentVideo(video)) return;
+    for (final subtitlePath in paths) {
+      final exists = await dart_io.File(subtitlePath).exists();
+      if (!_isCurrentVideo(video)) return;
+      if (!exists) continue;
+      try {
+        await _repository.loadExternalSubtitle(subtitlePath);
+      } catch (error) {
+        if (!_isCurrentVideo(video)) return;
+        AppLogger.w('Unable to restore subtitle: $error');
       }
-      loadSubtitleTracks();
-      AppLogger.d(
-          'Total subtitle tracks after persisted load: ${state.subtitleTracks.length}');
-      notifyListeners();
-    } catch (e) {
-      AppLogger.e('Failed to load persisted subtitles: $e');
     }
-  }
-
-  Future<void> _persistSubtitlePaths(List<String> paths) async {
-    if (_currentVideo == null) return;
-    try {
-      final existing = await HistoryService.getSubtitlePaths(_currentVideo!.id);
-    if (playbackDisposed) return;
-      final merged = {...existing, ...paths}.toList();
-      await HistoryService.saveSubtitlePaths(_currentVideo!.id, merged);
-    if (playbackDisposed) return;
-    } catch (_) {}
-  }
-
-  Future<bool> _fileExists(String path) async {
-    try {
-      return await dartIo.File(path).exists();
-    } catch (_) {
-      return false;
-    }
+    if (_isCurrentVideo(video)) loadSubtitleTracks();
   }
 
   Future<void> _applyPlayerPreset() async {
@@ -387,7 +334,7 @@ class PlayerController extends ChangeNotifier
   }
 
   Future<void> syncKeepScreenAwakePreference() async {
-    await WakelockPlus.enable();
+    await PlaybackWakelock.setActive(this, _state.isPlaying);
     if (playbackDisposed) return;
   }
 
@@ -459,6 +406,7 @@ class PlayerController extends ChangeNotifier
   /// Pause the video playback
   void pauseVideo() {
     _repository.pause();
+    unawaited(PlaybackWakelock.setActive(this, false));
     _state.isPlaying = false;
     notifyListeners();
   }
@@ -568,7 +516,7 @@ class PlayerController extends ChangeNotifier
     _tapTimer?.cancel();
     _tapTimer = null;
 
-    unawaited(WakelockPlus.disable().catchError((_) {}));
+    unawaited(PlaybackWakelock.setActive(this, false));
     _repository.dispose();
     super.dispose();
   }

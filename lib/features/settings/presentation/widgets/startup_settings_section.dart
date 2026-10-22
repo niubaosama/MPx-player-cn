@@ -22,9 +22,9 @@ class _StartupSettingsSectionState extends State<StartupSettingsSection> {
       await AppSettingsService.saveSplashSettings(enabled: _enabled,
         durationMs: (_duration * 1000).round(), style: _style,
         title: _title.text.trim(), subtitle: _subtitle.text.trim());
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Saved'))));
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Saved')))); }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Unable to save settings'))));
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Unable to save settings')))); }
     } finally { if (mounted) setState(() => _saving = false); }
   }
   @override

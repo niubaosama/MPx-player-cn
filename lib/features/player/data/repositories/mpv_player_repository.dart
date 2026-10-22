@@ -24,10 +24,10 @@ class MpvPlayerRepository implements PlayerRepository {
   void _setupTrackListeners() {
     _trackSubscription = _player.stream.tracks.listen((tracks) {
       if (!_audioTracksController.isClosed) {
-        _audioTracksController.add(null);
+        if (!_isDisposed) _audioTracksController.add(null);
       }
       if (!_subtitleTracksController.isClosed) {
-        _subtitleTracksController.add(null);
+        if (!_isDisposed) _subtitleTracksController.add(null);
       }
     });
   }
@@ -154,14 +154,14 @@ class MpvPlayerRepository implements PlayerRepository {
   Future<void> enableSubtitles() async {
     _ensureNotDisposed();
     await _player.setSubtitleTrack(SubtitleTrack.auto());
-    _subtitleTracksController.add(null);
+    if (!_isDisposed) _subtitleTracksController.add(null);
   }
 
   @override
   Future<void> disableSubtitles() async {
     _ensureNotDisposed();
     await _player.setSubtitleTrack(SubtitleTrack.no());
-    _subtitleTracksController.add(null);
+    if (!_isDisposed) _subtitleTracksController.add(null);
   }
 
   @override
@@ -184,7 +184,7 @@ class MpvPlayerRepository implements PlayerRepository {
     final tracks = _player.state.tracks.subtitle;
     if (index >= 0 && index < tracks.length) {
       await _player.setSubtitleTrack(tracks[index]);
-      _subtitleTracksController.add(null);
+      if (!_isDisposed) _subtitleTracksController.add(null);
     }
   }
 
@@ -200,7 +200,7 @@ class MpvPlayerRepository implements PlayerRepository {
         language: 'auto',
       ),
     );
-    _subtitleTracksController.add(null);
+    if (!_isDisposed) _subtitleTracksController.add(null);
   }
 
   @override
@@ -223,7 +223,7 @@ class MpvPlayerRepository implements PlayerRepository {
     final tracks = _player.state.tracks.audio;
     if (index >= 0 && index < tracks.length) {
       await _player.setAudioTrack(tracks[index]);
-      _audioTracksController.add(null);
+      if (!_isDisposed) _audioTracksController.add(null);
     }
   }
 

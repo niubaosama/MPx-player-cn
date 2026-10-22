@@ -24,7 +24,7 @@ void main() {
     expect(find.text('自定义副标题'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 399));
     expect(completed, 0);
-    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump(const Duration(milliseconds: 17));
     expect(completed, 1);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));

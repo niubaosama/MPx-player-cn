@@ -1,7 +1,7 @@
 name: mpx
 description: "MPx Player - A modern video player built with Flutter"
 publish_to: "none"
-version: 2.2.1+1
+version: 2.3.0+2
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

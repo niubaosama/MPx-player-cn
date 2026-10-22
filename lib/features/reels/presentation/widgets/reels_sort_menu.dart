@@ -6,11 +6,13 @@ import 'package:mpx/core/theme/app_theme_tokens.dart';
 class ReelsSortMenu extends StatelessWidget {
   final void Function(ReelsSortOrder) onSortSelected;
   final ThemeData theme;
+  final VoidCallback? onRefresh;
 
   const ReelsSortMenu({
     super.key,
     required this.onSortSelected,
     required this.theme,
+    this.onRefresh,
   });
 
   @override
@@ -20,10 +22,14 @@ class ReelsSortMenu extends StatelessWidget {
         color: theme.elevatedSurface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: PopupMenuButton<ReelsSortOrder>(
+      child: PopupMenuButton<Object>(
         icon: Icon(Icons.sort_rounded, color: theme.strongText),
-        onSelected: onSortSelected,
+        onSelected: (value) {
+          if (value is ReelsSortOrder) onSortSelected(value);
+          if (value == 'refresh') onRefresh?.call();
+        },
         itemBuilder: (context) => [
+          if (onRefresh != null) PopupMenuItem(value: 'refresh', child: Text(context.tr('Refresh'))),
            PopupMenuItem(
             value: ReelsSortOrder.dateDesc,
             child: Text(context.tr('Newest First')),

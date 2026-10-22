@@ -150,7 +150,10 @@ class ReelService {
     return videos.values.toList();
   }
   Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async {
-    final volumes = await StoragePathService.getAccessibleStorageVolumes();
+    final volumes = <Directory>[await _appDirectory()];
+    if (Platform.isAndroid) {
+      volumes.addAll(await StoragePathService.getAccessibleStorageVolumes());
+    }
     final roots = <String>{};
     for (final volume in volumes) {
       final parts = p.split(volume.path);

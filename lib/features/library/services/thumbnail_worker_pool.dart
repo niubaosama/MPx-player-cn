@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -72,6 +73,27 @@ class ThumbnailWorkerPool {
 
   final Map<String, Completer<String?>> _pendingRequests = {};
   bool _initialized = false;
+  int _activeJobs = 0;
+  final Queue<Completer<void>> _waitingJobs = Queue<Completer<void>>();
+
+  Future<void> _acquireJob() async {
+    if (_activeJobs < 2) {
+      _activeJobs++;
+      return;
+    }
+    final waiter = Completer<void>();
+    _waitingJobs.add(waiter);
+    await waiter.future;
+  }
+
+  void _releaseJob() {
+    if (_waitingJobs.isNotEmpty) {
+      _waitingJobs.removeFirst().complete();
+    } else {
+      _activeJobs--;
+    }
+  }
+
   String? _thumbnailDir;
 
   Future<void> initialize() async {
@@ -115,19 +137,24 @@ class ThumbnailWorkerPool {
         return thumbnailPath;
       }
 
-      final path = await _generateThumbnailFile(
+      await _acquireJob();
+      String? path;
+      try {
+      path = await _generateThumbnailFile(
         videoPath,
         _thumbnailDir!,
         timeMs: timeMs,
         smartTimestamp: smartTimestamp,
         durationMs: durationMs,
       );
+      } finally { _releaseJob(); }
 
       _pendingRequests.remove(videoPath);
       completer.complete(path);
 
       if (path != null) {
         AppLogger.i('Thumbnail generated in background: $path');
+        ThumbnailCache().onThumbnailWritten();
         // Asynchronously update memory cache
         unawaited(ThumbnailCache().putPath(videoPath, path));
       }
