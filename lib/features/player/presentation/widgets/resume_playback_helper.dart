@@ -23,6 +23,7 @@ class ResumePlaybackHelper {
     var effectiveDuration = totalDuration;
     while (effectiveDuration.inSeconds == 0 && attempts < 100) {
       await Future.delayed(const Duration(milliseconds: 100));
+      if (controller.playbackDisposed) return null;
       attempts++;
       effectiveDuration = controller.duration;
     }
@@ -34,15 +35,14 @@ class ResumePlaybackHelper {
     attempts = 0;
     while (controller.isBuffering && attempts < 50) {
       await Future.delayed(const Duration(milliseconds: 100));
+      if (controller.playbackDisposed) return null;
       attempts++;
     }
 
-    // Extra delay to ensure video is ready for seeking
-    await Future.delayed(const Duration(milliseconds: 300));
 
     // Get the saved position
     final savedPosition = await HistoryService.getLastPosition(videoId);
-    if (savedPosition == null) return null;
+    if (controller.playbackDisposed || savedPosition == null) return null;
 
     // Check if we should resume (position > 5s from start and > 30s from end)
     final totalSeconds = effectiveDuration.inSeconds;

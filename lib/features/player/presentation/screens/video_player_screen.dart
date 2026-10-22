@@ -1,3 +1,5 @@
+import '../../domain/entities/playback_transfer.dart';
+import '../../../reels/presentation/screens/reels_screen.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -28,12 +30,20 @@ class VideoPlayerScreen extends StatefulWidget {
   final VideoFile video;
   final List<VideoFile>? playlist;
   final int? initialPlaylistIndex;
+  final Duration? initialPosition;
+  final double? initialPlaybackSpeed;
+  final bool initiallyPaused;
+  final bool returnPlaybackState;
 
   const VideoPlayerScreen({
     super.key,
     required this.video,
     this.playlist,
     this.initialPlaylistIndex,
+    this.initialPosition,
+    this.initialPlaybackSpeed,
+    this.initiallyPaused = false,
+    this.returnPlaybackState = false,
   });
 
   @override
@@ -43,6 +53,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     with WidgetsBindingObserver {
   bool _isInPipMode = false;
+  PlayerController? _controller;
 
   @override
   void initState() {
@@ -64,10 +75,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       if (_isInPipMode) return;
-      final controller = context.read<PlayerController>();
-      controller.pauseVideo();
-      controller.savePositionOnBackground();
+      _controller?.pauseVideo();
+      _controller?.savePositionOnBackground();
     }
+  }
+
+  Future<void> _loadInitial(PlayerController controller) async {
+    await controller.loadVideoFile(widget.video);
+    if (!mounted || controller.playbackDisposed) return;
+    if (widget.initialPosition != null) controller.seek(widget.initialPosition!);
+    if (widget.initialPlaybackSpeed != null) controller.setSpeed(widget.initialPlaybackSpeed!);
+    if (widget.initiallyPaused) controller.pauseVideo();
   }
 
   @override
@@ -76,9 +94,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     // Provider automatically handles disposal via controller.dispose()
     return ChangeNotifierProvider(
       create: (_) {
-        final repository = MpvPlayerRepository();
+        final repository = MpvPlayerRepository(autoPlay: !widget.initiallyPaused);
         final controller = PlayerController(repository);
-        controller.loadVideoFile(widget.video);
+        _controller = controller;
+        _loadInitial(controller);
         WakelockPlus.enable();
         controller.startHideTimer();
         return controller;
@@ -89,6 +108,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         initialPlaylistIndex: widget.initialPlaylistIndex ?? 0,
         onPipModeChanged: _setPipMode,
         isInPipMode: _isInPipMode,
+        skipHistoryResume: widget.initialPosition != null,
+        returnPlaybackState: widget.returnPlaybackState,
       ),
     );
   }
@@ -101,6 +122,8 @@ class _VideoPlayerScreenContent extends StatefulWidget {
   final int initialPlaylistIndex;
   final ValueChanged<bool>? onPipModeChanged;
   final bool isInPipMode;
+  final bool skipHistoryResume;
+  final bool returnPlaybackState;
 
   const _VideoPlayerScreenContent({
     required this.video,
@@ -108,6 +131,8 @@ class _VideoPlayerScreenContent extends StatefulWidget {
     required this.initialPlaylistIndex,
     this.onPipModeChanged,
     this.isInPipMode = false,
+    this.skipHistoryResume = false,
+    this.returnPlaybackState = false,
   });
 
   @override
@@ -129,7 +154,7 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     super.initState();
     if (widget.playlist != null && widget.playlist!.isNotEmpty) {
       _playlist = widget.playlist!;
-      _currentIndex = widget.initialPlaylistIndex;
+      _currentIndex = widget.initialPlaylistIndex.clamp(0, _playlist.length - 1);
     } else {
       _playlist = [widget.video];
       _currentIndex = 0;
@@ -139,7 +164,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     // Check for auto-resume after a short delay to ensure video is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndResumePlayback();
+      if (mounted && !widget.skipHistoryResume) _checkAndResumePlayback();
+      if (!mounted) return;
       _recordVideoInHistory();
       _initPip();
     });
@@ -227,17 +253,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, Object? result) async {
-        if (didPop) return;
-        controller.pauseVideo();
-        await controller.saveAndCleanup();
-        // ignore: use_build_context_synchronously
-        final navigator = Navigator.of(context);
-        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-        await SystemChrome.setPreferredOrientations(
-            [DeviceOrientation.portraitUp]);
-        await Future.delayed(const Duration(milliseconds: 200));
-        navigator.pop();
+      onPopInvokedWithResult: (didPop, Object? result) {
+        if (!didPop) _leavePlayer();
       },
       child: PipWidget(
         pipLayout: PipActionsLayout.media,
@@ -272,16 +289,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
               PlayerView(
                 controller: controller,
                 videoTitle: widget.video.title,
-                onBack: () async {
-                  controller.pauseVideo();
-                  await controller.saveAndCleanup();
-                  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-                  SystemChrome.setPreferredOrientations(
-                      [DeviceOrientation.portraitUp]);
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
-                },
+                onBack: _leavePlayer,
+                onSwitchReels: _switchToReels,
                 onSubtitleSettings: () =>
                     _showSubtitleSettings(context, controller),
                 onSettings: () => _showSettings(context, controller),
@@ -327,6 +336,37 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
     );
   }
 
+  bool _leaving = false;
+  PlaybackTransfer _transfer(PlayerController controller) => PlaybackTransfer(
+    videos: List.of(_playlist), index: _currentIndex, position: controller.position,
+    speed: controller.playbackSpeed, paused: !controller.isPlaying);
+
+  Future<void> _leavePlayer() async {
+    if (_leaving) return;
+    _leaving = true;
+    final controller = context.read<PlayerController>();
+    final playback = _transfer(controller);
+    controller.pauseVideo();
+    await controller.saveAndCleanup();
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    if (mounted) Navigator.of(context).pop(widget.returnPlaybackState ? playback : null);
+  }
+
+  Future<void> _switchToReels() async {
+    if (_leaving) return;
+    _leaving = true;
+    final controller = context.read<PlayerController>();
+    final playback = _transfer(controller);
+    controller.pauseVideo();
+    await controller.saveAndCleanup();
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute<PlaybackTransfer>(
+      builder: (_) => ReelsScreen(initialPlayback: playback)));
+  }
+
   void _showSubtitleSettings(
       BuildContext context, PlayerController controller) {
     showModalBottomSheet(
@@ -367,6 +407,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
             video: _playlist[_currentIndex],
             playlist: _playlist,
             initialPlaylistIndex: _currentIndex,
+            initialPlaybackSpeed: controller.playbackSpeed,
+            returnPlaybackState: widget.returnPlaybackState,
           ),
         ),
       );
@@ -390,6 +432,8 @@ class _VideoPlayerScreenContentState extends State<_VideoPlayerScreenContent> {
             video: _playlist[_currentIndex],
             playlist: _playlist,
             initialPlaylistIndex: _currentIndex,
+            initialPlaybackSpeed: controller.playbackSpeed,
+            returnPlaybackState: widget.returnPlaybackState,
           ),
         ),
       );

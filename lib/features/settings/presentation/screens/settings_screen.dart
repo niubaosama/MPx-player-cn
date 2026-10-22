@@ -1,3 +1,4 @@
+import '../widgets/startup_settings_section.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -103,6 +104,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       colors: colors,
                       child: const _StoragePermissionSection(),
                     ),
+                  _buildExpandableSection(index: 6, title: context.tr('Startup screen'),
+                    icon: Icons.rocket_launch_outlined, colors: colors,
+                    child: const StartupSettingsSection()),
                   SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
                 ],
               ),

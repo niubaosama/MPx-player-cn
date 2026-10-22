@@ -1,3 +1,4 @@
+import 'playback_seek_bar.dart';
 import 'package:flutter/material.dart';
 
 class BottomControls extends StatefulWidget {
@@ -95,35 +96,16 @@ class _BottomControlsState extends State<BottomControls> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-              activeTrackColor: Colors.white,
-              inactiveTrackColor: Colors.white24,
-              thumbColor: Colors.white,
-              overlayShape: SliderComponentShape.noOverlay,
-            ),
-            child: Slider(
-              value: _sliderValue,
-              max: _sliderMax,
-              onChangeStart: (_) {
-                widget.onSeekStart();
-              },
-              onChanged: (value) {
-                setState(() => _dragValue = value);
-                // Snap to nearest second for precise seeking
-                final snapped = (value / 1000).round() * 1000.0;
-                widget.onSeekChanged(snapped);
-              },
-              onChangeEnd: (value) {
-                // Snap to nearest second before final seek
-                final snapped = (value / 1000).round() * 1000.0;
-                widget.onSeekEnd(snapped);
-                setState(() => _dragValue = null);
-              },
-            ),
-          ),
+          PlaybackSeekBar(position: widget.position, duration: widget.duration,
+            onSeekStart: widget.onSeekStart,
+            onSeekChanged: (value) {
+              setState(() => _dragValue = value);
+              widget.onSeekChanged(value);
+            },
+            onSeekEnd: (value) {
+              widget.onSeekEnd(value);
+              setState(() => _dragValue = null);
+            }),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

@@ -24,5 +24,6 @@ void main() {
 
     // Verify that the app loads and shows either loading indicator or permission screen
     expect(find.byType(MaterialApp), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

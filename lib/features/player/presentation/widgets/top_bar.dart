@@ -1,3 +1,4 @@
+import '../../../../core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../controller/player_state.dart';
 import '../../domain/repositories/player_repository.dart';
@@ -16,6 +17,7 @@ class TopBar extends StatelessWidget {
   final VoidCallback onToggleAspectRatio;
   final VoidCallback onSubtitleSettings;
   final VoidCallback onSettings;
+  final VoidCallback? onSwitchReels;
   final VoidCallback? onShowAudioTracks;
 
   const TopBar({
@@ -33,6 +35,7 @@ class TopBar extends StatelessWidget {
     required this.onToggleAspectRatio,
     required this.onSubtitleSettings,
     required this.onSettings,
+    this.onSwitchReels,
     this.onShowAudioTracks,
   });
 
@@ -64,6 +67,9 @@ class TopBar extends StatelessWidget {
               ),
             ),
           ),
+          if (onSwitchReels != null) IconButton(
+            tooltip: context.tr('Switch to Reels'), onPressed: onSwitchReels,
+            icon: const Icon(Icons.swipe_vertical, color: Colors.white)),
           const SizedBox(width: 10),
           _MinimalIconButton(
             icon: isLocked ? Icons.lock : Icons.lock_open,

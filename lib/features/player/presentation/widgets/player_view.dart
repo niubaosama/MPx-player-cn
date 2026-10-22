@@ -13,6 +13,7 @@ class PlayerView extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSubtitleSettings;
   final VoidCallback onSettings;
+  final VoidCallback? onSwitchReels;
   final VoidCallback? onNext;
   final VoidCallback? onPrevious;
   final VoidCallback? onTogglePip;
@@ -26,6 +27,7 @@ class PlayerView extends StatelessWidget {
     required this.onBack,
     required this.onSubtitleSettings,
     required this.onSettings,
+    this.onSwitchReels,
     this.onNext,
     this.onPrevious,
     this.onTogglePip,
@@ -84,6 +86,7 @@ class PlayerView extends StatelessWidget {
                 onBack: onBack,
                 onSubtitleSettings: onSubtitleSettings,
                 onSettings: onSettings,
+                onSwitchReels: onSwitchReels,
                 onNext: onNext,
                 onPrevious: onPrevious,
                 onTogglePip: onTogglePip,

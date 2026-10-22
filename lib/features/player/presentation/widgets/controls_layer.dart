@@ -9,6 +9,7 @@ class ControlsLayer extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSubtitleSettings;
   final VoidCallback onSettings;
+  final VoidCallback? onSwitchReels;
   final VoidCallback? onNext;
   final VoidCallback? onPrevious;
   final VoidCallback? onTogglePip;
@@ -21,6 +22,7 @@ class ControlsLayer extends StatelessWidget {
     required this.onBack,
     required this.onSubtitleSettings,
     required this.onSettings,
+    this.onSwitchReels,
     this.onNext,
     this.onPrevious,
     this.onTogglePip,
@@ -136,6 +138,7 @@ class ControlsLayer extends StatelessWidget {
                       controller.registerControlsInteraction();
                       onSettings();
                     },
+                    onSwitchReels: onSwitchReels,
                     onShowAudioTracks: null,
                   ),
                 ),

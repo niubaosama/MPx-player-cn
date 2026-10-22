@@ -221,24 +221,13 @@ class _MainScreenState extends State<MainScreen>
         final isDragTarget = dragTargetIndex == index;
         final shouldShow = isCurrent || isDragTarget;
 
-        if (!shouldShow) {
-          return Offstage(
-            offstage: true,
-            child: TickerMode(
-              enabled: false,
-              child: KeyedSubtree(
-                key: ValueKey(index),
-                child: _buildScreen(index),
-              ),
-            ),
-          );
-        }
-
         final offset = isCurrent
             ? _dragOffset
             : (_dragOffset < 0 ? width : -width) + _dragOffset;
 
-        return Transform.translate(
+        return Offstage(
+          offstage: !shouldShow,
+          child: Transform.translate(
           offset: Offset(offset, 0),
           child: TickerMode(
             enabled: isCurrent,
@@ -247,7 +236,7 @@ class _MainScreenState extends State<MainScreen>
               child: _buildScreen(index),
             ),
           ),
-        );
+        ));
       }),
     );
   }
@@ -266,10 +255,10 @@ class _MainScreenState extends State<MainScreen>
 
           return GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: _handleHorizontalDragStart,
-            onHorizontalDragUpdate: (details) =>
+            onHorizontalDragStart: isReels ? null : _handleHorizontalDragStart,
+            onHorizontalDragUpdate: isReels ? null : (details) =>
                 _handleHorizontalDragUpdate(details, width),
-            onHorizontalDragEnd: (details) =>
+            onHorizontalDragEnd: isReels ? null : (details) =>
                 _handleHorizontalDragEnd(details, width),
             child: ClipRect(
               child: _buildTabLayers(width),

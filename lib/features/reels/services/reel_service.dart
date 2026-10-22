@@ -149,4 +149,20 @@ class ReelService {
     }
     return videos.values.toList();
   }
+  Future<List<VideoFile>> getLocalVideos({bool forceRefresh = false}) async {
+    final volumes = await StoragePathService.getAccessibleStorageVolumes();
+    final roots = <String>{};
+    for (final volume in volumes) {
+      final parts = p.split(volume.path);
+      final android = parts.indexOf('Android');
+      roots.add(android > 0 ? p.joinAll(parts.take(android)) : volume.path);
+    }
+    final videos = <String, VideoFile>{};
+    for (final root in roots) {
+      final snapshot = await _index.ensureIndexed(root, forceRefresh: forceRefresh);
+      for (final video in snapshot.videos) { videos[video.path] = video; }
+    }
+    return videos.values.toList();
+  }
+
 }

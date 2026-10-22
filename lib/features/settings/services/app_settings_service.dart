@@ -213,6 +213,23 @@ class AppSettingsService {
   static const String _doubleTapSeekStepKey = 'double_tap_seek_step';
   static const String _dragSeekSensitivityKey = 'drag_seek_sensitivity';
 
+  static bool get splashEnabled => _prefs.getBool('splash_enabled') ?? true;
+  static int get splashDurationMs => (_prefs.getInt('splash_duration_ms') ?? 600).clamp(200, 3000);
+  static String get splashStyle => _prefs.getString('splash_style') ?? 'minimal';
+  static String get splashTitle => _prefs.getString('splash_title') ?? 'MPx';
+  static String get splashSubtitle => _prefs.getString('splash_subtitle') ?? '';
+  static Future<void> saveSplashSettings({required bool enabled, required int durationMs,
+    required String style, required String title, required String subtitle}) async {
+    final results = await Future.wait([
+      _prefs.setBool('splash_enabled', enabled),
+      _prefs.setInt('splash_duration_ms', durationMs.clamp(200, 3000)),
+      _prefs.setString('splash_style', style),
+      _prefs.setString('splash_title', title),
+      _prefs.setString('splash_subtitle', subtitle),
+    ]);
+    if (results.any((saved) => !saved)) throw StateError('Unable to save startup settings');
+  }
+
   static late SharedPreferences _prefs;
 
   static Future<void> init() async {

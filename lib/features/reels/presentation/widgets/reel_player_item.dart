@@ -1,269 +1,152 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_mpv/flutter_mpv.dart';
-import 'package:flutter_mpv_video/flutter_mpv_video.dart';
-import 'package:mpx/features/library/domain/entities/video_file.dart';
-import 'package:mpx/features/player/presentation/widgets/player_volume_indicator.dart';
-import 'package:mpx/features/reels/presentation/widgets/reel_progress_bar.dart';
-import 'package:mpx/features/reels/presentation/widgets/seek_feedback_indicator.dart';
-import 'package:mpx/features/reels/presentation/widgets/playback_speed_indicator.dart';
-import 'package:mpx/features/reels/presentation/widgets/pause_indicator.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../library/domain/entities/video_file.dart';
+import '../../../player/controller/player_controller.dart';
+import '../../../player/data/repositories/mpv_player_repository.dart';
+import '../../../player/presentation/widgets/player_surface.dart';
+import '../../../player/presentation/widgets/playback_seek_bar.dart';
 
+/// 仅当前可见页创建解码器，离开时释放；进度交还给外部会话。
 class ReelPlayerItem extends StatefulWidget {
   final VideoFile video;
-  final bool isCurrentlyVisible;
   final double playbackSpeed;
-  final VoidCallback? onTogglePause;
   final bool isPaused;
-
-  const ReelPlayerItem({
-    super.key,
-    required this.video,
-    required this.isCurrentlyVisible,
-    this.playbackSpeed = 1.0,
-    this.onTogglePause,
-    this.isPaused = false,
-  });
-
+  final bool isMuted;
+  final Duration initialPosition;
+  final VoidCallback onTogglePause;
+  final ValueChanged<Duration> onPosition;
+  const ReelPlayerItem({super.key, required this.video,
+    required this.playbackSpeed, required this.isPaused, required this.isMuted,
+    required this.initialPosition, required this.onTogglePause, required this.onPosition});
   @override
   State<ReelPlayerItem> createState() => _ReelPlayerItemState();
 }
-
 class _ReelPlayerItemState extends State<ReelPlayerItem> {
-  late final Player _player = Player(
-    configuration: const PlayerConfiguration(
-      title: 'MPx Reels',
-      bufferSize: 96 * 1024 * 1024,
-      videoPerformance: VideoPerformancePresets.balanced,
-    ),
-  );
-  late final VideoController _controller = VideoController(_player);
-  bool _isMuted = false;
-  Timer? _hideVolumeIndicatorTimer;
-  double _volumeIndicatorOpacity = 0.0;
-  bool _showSeekForward = false;
-  bool _showSeekBackward = false;
-  Timer? _seekHideTimer;
-  bool _isLongPressing = false;
-  bool _showPauseIndicator = false;
-  Timer? _pauseHideTimer;
-  Duration _currentPosition = Duration.zero;
-  Duration _duration = Duration.zero;
-  int _tapCount = 0;
-  Timer? _tapTimer;
-
+  late final MpvPlayerRepository _repository;
+  late final PlayerController _controller;
+  bool _ready = false;
+  String? _error;
+  bool _seeking = false;
+  bool _longPressing = false;
   @override
   void initState() {
     super.initState();
-    _player.setVolume(_isMuted ? 0.0 : 100.0);
-    _player.setPlaylistMode(PlaylistMode.single);
-    _player.setRate(widget.playbackSpeed);
-    _player.open(Media(widget.video.path),
-        play: widget.isCurrentlyVisible && !widget.isPaused);
-    _player.stream.position.listen((pos) {
-      if (mounted) {
-        setState(() => _currentPosition = pos);
-      }
-    });
-    _player.stream.duration.listen((dur) {
-      if (mounted) {
-        setState(() => _duration = dur);
-      }
-    });
+    _repository = MpvPlayerRepository(autoPlay: false);
+    _controller = PlayerController(_repository);
+    _controller.addListener(_rememberPosition);
+    _controller.trackPlaybackSubscription(_repository.player.stream.error.listen((error) {
+      if (mounted && error.isNotEmpty) setState(() => _error = error);
+    }));
+    _initialize();
   }
-
+  void _rememberPosition() => widget.onPosition(_controller.position);
+  Future<void> _initialize() async {
+    try {
+      await _controller.loadVideoFile(widget.video);
+      if (!mounted) return;
+      if (widget.initialPosition > Duration.zero) {
+        await _repository.seek(widget.initialPosition);
+        _controller.state.position = widget.initialPosition;
+      }
+      if (!mounted) return;
+      _ready = true;
+      await _syncPlayback();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    }
+  }
+  Future<void> _syncPlayback() async {
+    if (!_ready || !mounted) return;
+    await _repository.setSpeed(_longPressing ? 2 : widget.playbackSpeed);
+    if (!mounted) return;
+    await _repository.setVolume(widget.isMuted ? 0 : 100);
+    if (!mounted) return;
+    if (widget.isPaused || _seeking) {
+      await _repository.pause();
+    } else {
+      await _repository.play();
+    }
+  }
   @override
   void didUpdateWidget(ReelPlayerItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.playbackSpeed != oldWidget.playbackSpeed && !_isLongPressing) {
-      _player.setRate(widget.playbackSpeed);
-    }
-    if (widget.isCurrentlyVisible != oldWidget.isCurrentlyVisible ||
-        widget.isPaused != oldWidget.isPaused) {
-      final shouldPlay = widget.isCurrentlyVisible && !widget.isPaused;
-      if (shouldPlay) {
-        _player.play();
-      } else {
-        _player.pause();
-      }
-    }
+    if (widget.isPaused != oldWidget.isPaused || widget.isMuted != oldWidget.isMuted ||
+        widget.playbackSpeed != oldWidget.playbackSpeed) _syncPlayback();
   }
-
+  void _endLongPress() {
+    if (!_longPressing) return;
+    setState(() => _longPressing = false);
+    _syncPlayback();
+  }
   @override
   void dispose() {
-    _player.dispose();
-    _hideVolumeIndicatorTimer?.cancel();
-    _seekHideTimer?.cancel();
-    _pauseHideTimer?.cancel();
-    _tapTimer?.cancel();
+    widget.onPosition(_controller.position);
+    _controller.removeListener(_rememberPosition);
+    unawaited(_controller.saveCurrentPosition(force: true));
+    _controller.dispose();
     super.dispose();
   }
-
-  void _onTap() {
-    _tapCount++;
-    if (_tapCount == 1) {
-      _tapTimer = Timer(const Duration(milliseconds: 250), () {
-        if (_tapCount == 1) {
-          _toggleMute();
-        }
-        _tapCount = 0;
-      });
-    } else if (_tapCount >= 2) {
-      _tapTimer?.cancel();
-      _tapCount = 0;
-      _togglePause();
-    }
-  }
-
-  void _toggleMute() {
-    setState(() {
-      _isMuted = !_isMuted;
-      _player.setVolume(_isMuted ? 0.0 : 100.0);
-      _volumeIndicatorOpacity = 1.0;
-      _hideVolumeIndicatorTimer?.cancel();
-      _hideVolumeIndicatorTimer = Timer(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() => _volumeIndicatorOpacity = 0.0);
-        }
-      });
-    });
-  }
-
-  void _togglePause() {
-    widget.onTogglePause?.call();
-    _showPauseIndicator = true;
-    _pauseHideTimer?.cancel();
-    _pauseHideTimer = Timer(const Duration(milliseconds: 600), () {
-      if (mounted) setState(() => _showPauseIndicator = false);
-    });
-  }
-
-  void _seek(bool forward) {
-    final currentPosition = _player.state.position;
-    final newPosition = currentPosition +
-        (forward ? const Duration(seconds: 5) : const Duration(seconds: -5));
-    _player.seek(newPosition);
-
-    setState(() {
-      if (forward) {
-        _showSeekForward = true;
-      } else {
-        _showSeekBackward = true;
-      }
-    });
-
-    _seekHideTimer?.cancel();
-    _seekHideTimer = Timer(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() {
-          _showSeekForward = false;
-          _showSeekBackward = false;
-        });
-      }
-    });
-  }
-
-  void _onSeek(Duration position) {
-    _player.seek(position);
-  }
-
-  void _onLongPressStart() {
-    setState(() {
-      _isLongPressing = true;
-    });
-    _player.setRate(2.0);
-  }
-
-  void _onLongPressEnd() {
-    setState(() {
-      _isLongPressing = false;
-    });
-    _player.setRate(widget.playbackSpeed);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _onTap,
-      onDoubleTapDown: (details) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        if (details.localPosition.dx < screenWidth / 2) {
-          _seek(false);
-        } else {
-          _seek(true);
-        }
-      },
-      onLongPressStart: (_) => _onLongPressStart(),
-      onLongPressEnd: (_) => _onLongPressEnd(),
-      onLongPressCancel: _onLongPressEnd,
-      child: Stack(
-        children: [
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: Video(
-              controller: _controller,
-              controls: null,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Center(
-            child: AnimatedOpacity(
-              opacity: _volumeIndicatorOpacity,
-              duration: const Duration(milliseconds: 300),
-              child: PlayerVolumeIndicator(isMuted: _isMuted),
-            ),
-          ),
-          if (_showSeekForward)
-            const Positioned(
-              right: 24,
-              top: 0,
-              bottom: 80,
-              child: Center(
-                child: SeekFeedbackIndicator(
-                  isForward: true,
-                  forwardedTime: 5,
-                ),
-              ),
-            ),
-          if (_showSeekBackward)
-            const Positioned(
-              left: 24,
-              top: 0,
-              bottom: 80,
-              child: Center(
-                child: SeekFeedbackIndicator(
-                  isForward: false,
-                  forwardedTime: 5,
-                ),
-              ),
-            ),
-          if (_isLongPressing)
-            const Positioned(
-              top: 120,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: PlaybackSpeedIndicator(speed: 2.0),
-              ),
-            ),
-          Center(
-            child: PauseIndicator(
-              isPaused: widget.isPaused && _showPauseIndicator,
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: ReelProgressBar(
-              position: _currentPosition,
-              duration: _duration,
-              onSeek: _onSeek,
-            ),
-          ),
-        ],
-      ),
-    );
+    return Stack(fit: StackFit.expand, children: [
+      GestureDetector(behavior: HitTestBehavior.opaque,
+        onTap: widget.onTogglePause,
+        onLongPressStart: (_) { setState(() => _longPressing = true); _syncPlayback(); },
+        onLongPressEnd: (_) => _endLongPress(), onLongPressCancel: _endLongPress,
+        child: PlayerSurface(controller: _controller.videoController,
+          subtitleFontSize: _controller.subtitleFontSize,
+          subtitleColor: _controller.subtitleColor,
+          subtitleFontFamily: _controller.subtitleFontFamily,
+          subtitleHasBackground: _controller.subtitleHasBackground,
+          subtitleFontWeight: _controller.subtitleFontWeight,
+          subtitleBottomPadding: 110,
+          subtitleBackgroundOpacity: _controller.subtitleBackgroundOpacity)),
+      if (_error != null) Center(child: Container(
+        padding: const EdgeInsets.all(20), color: Colors.black87,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(context.tr('Unable to play this video'), style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 8),
+          Text(_error!, maxLines: 3, style: const TextStyle(color: Colors.white60)),
+          TextButton(onPressed: () {
+            setState(() { _error = null; _ready = false; });
+            _initialize();
+          }, child: Text(context.tr('Retry'))),
+        ]))),
+      if (_error == null) AnimatedBuilder(animation: _controller, builder: (context, _) => Stack(children: [
+        if (!_ready || _controller.isBuffering)
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+        if (_ready && widget.isPaused)
+          const Center(child: IgnorePointer(child: Icon(Icons.play_arrow_rounded, size: 72, color: Colors.white70))),
+        if (_longPressing) const Positioned(top: 120, left: 0, right: 0,
+          child: Center(child: Text('2.0×', style: TextStyle(color: Colors.white, fontSize: 20)))),
+        Positioned(bottom: 0, left: 0, right: 0, child: SafeArea(top: false,
+          child: Container(padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+            decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter,
+              end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black87])),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(widget.video.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 13)),
+              PlaybackSeekBar(position: _controller.position, duration: _controller.duration,
+                onSeekStart: () {
+                  _seeking = true;
+                  _controller.state.isDraggingX = true;
+                  _repository.pause();
+                },
+                onSeekChanged: (value) => _controller.previewSeek(Duration(milliseconds: value.round())),
+                onSeekEnd: (value) {
+                  _controller.seek(Duration(milliseconds: value.round()));
+                  _controller.state.isDraggingX = false;
+                  _seeking = false;
+                  _syncPlayback();
+                }),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Text(formatTime(_controller.position), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(formatTime(_controller.duration), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ]),
+            ])))),
+      ])),
+    ]);
   }
 }

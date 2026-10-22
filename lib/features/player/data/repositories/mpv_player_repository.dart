@@ -12,7 +12,9 @@ class MpvPlayerRepository implements PlayerRepository {
   final StreamController<void> _subtitleTracksController =
       StreamController<void>.broadcast();
 
-  MpvPlayerRepository() {
+  final bool autoPlay;
+
+  MpvPlayerRepository({this.autoPlay = true}) {
     _player = Player(
       configuration: _configuration,
     );
@@ -115,7 +117,7 @@ class MpvPlayerRepository implements PlayerRepository {
   @override
   Future<void> load(String path) async {
     _ensureNotDisposed();
-    await _player.open(Media(path));
+    await _player.open(Media(path), play: autoPlay);
   }
 
   @override

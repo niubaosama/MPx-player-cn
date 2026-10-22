@@ -53,10 +53,11 @@ class MPxPlayer extends StatefulWidget {
 }
 
 class _MPxPlayerState extends State<MPxPlayer> {
-  bool _showSplash = true;
+  late bool _showSplash = AppSettingsService.splashEnabled;
   AppSettingsController? _settingsController;
 
   void _onSplashComplete() {
+    if (!mounted) return;
     setState(() {
       _showSplash = false;
     });
