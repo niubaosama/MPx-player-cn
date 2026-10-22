@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    name: 检查源码并生成 ARM64 APK
+    name: 检查源码与测试（按需生成 APK）
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
@@ -52,6 +52,7 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: 检查语言、存储来源与媒体索引
+        timeout-minutes: 5
         run: flutter test
 
       - name: 检查下载模块的汉化

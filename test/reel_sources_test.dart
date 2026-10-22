@@ -106,4 +106,12 @@ void main() {
     expect(await service.getSources(), isEmpty);
     expect(await Directory(p.join(root.path, 'missing')).exists(), isFalse);
   });
+
+  test('已有父目录缓存后添加新来源，能看到新增视频并更新父目录计数', () async {
+    await index.ensureIndexed(root.path);
+    final fresh = await video('new-folder/new.mp4');
+    await service.importFolder(fresh.parent.path);
+    expect((await service.getReelsVideos()).single.path, fresh.path);
+    expect(index.getFolderVideoCount(root.path, root.path), 1);
+  });
 }

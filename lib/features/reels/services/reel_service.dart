@@ -96,6 +96,7 @@ class ReelService {
     await _change((sources) => [
       ...sources.where((item) => item.path != source.path), source,
     ]);
+    await _index.ensureIndexed(path, forceRefresh: true);
   }
 
   Future<void> importVideoFile(String path) async {
@@ -137,6 +138,7 @@ class ReelService {
       for (final video in found) { videos[video.path] = video; }
     }
     for (final source in sources.where((source) => !source.isFolder)) {
+      if (videos.containsKey(source.path)) continue;
       final file = File(source.path);
       if (!await file.exists()) continue;
       final stat = await file.stat();

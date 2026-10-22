@@ -392,6 +392,7 @@ const Map<String, String> zhMessages = {
   '{count} weeks ago': '{count} 周前',
   '{count} months ago': '{count} 个月前',
   '{count} years ago': '{count} 年前',
+  'Close': '关闭',
   'Reels sources': '短视频来源',
   'Videos stay in their original folders. No files are copied.': '视频保留在原文件夹中，不会复制文件。',
   'No sources added yet': '尚未添加来源',

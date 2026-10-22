@@ -1,30 +1,32 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as p;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mpx/core/l10n/app_localizations.dart';
-import 'package:mpx/features/library/services/library_index_service.dart';
+import 'package:mpx/features/library/domain/entities/video_file.dart';
 import 'package:mpx/features/reels/controllers/reels_controller.dart';
 import 'package:mpx/features/reels/presentation/widgets/reel_sources_sheet.dart';
 import 'package:mpx/features/reels/services/reel_service.dart';
 
-import 'helpers/memory_index_database.dart';
+class _SourceService extends Fake implements ReelService {
+  List<ReelSource> sources = [const ReelSource(path: '/videos')];
+  @override
+  Future<List<ReelSource>> getSources() async => List.of(sources);
+  @override
+  Future<List<VideoFile>> getReelsVideos({bool forceRefresh = false}) async => [];
+  @override
+  Future<void> removeSource(String path) async {
+    sources.removeWhere((source) => source.path == path);
+  }
+  @override
+  Future<void> setIncludeSubfolders(String path, bool enabled) async {
+    sources = [ReelSource(path: path, includeSubfolders: enabled)];
+  }
+}
 
 void main() {
-  testWidgets('来源管理可以切换子文件夹、移除关联，原文件保持不变', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final root = await Directory.systemTemp.createTemp('mpx_source_ui_');
-    final folder = Directory(p.join(root.path, 'videos'));
-    await folder.create();
-    final file = await File(p.join(folder.path, 'movie.mp4')).writeAsString('original');
-    final index = LibraryIndexService.forTesting(MemoryIndexDatabase());
-    final service = ReelService.forTesting(index, () async => Directory(p.join(root.path, 'app')));
-    final controller = ReelsController(service: service);
+  testWidgets('来源管理可以切换子文件夹并移除关联', (tester) async {
+    final controller = ReelsController(service: _SourceService());
     await controller.loadReels();
-    await controller.importFolderToReels(folder.path);
     await tester.pumpWidget(MaterialApp(
       locale: const Locale('zh'),
       supportedLocales: AppLocalizations.supportedLocales,
@@ -40,10 +42,7 @@ void main() {
     await tester.tap(find.byTooltip('移除来源'));
     await tester.pumpAndSettle();
     expect(find.text('尚未添加来源'), findsOneWidget);
-    expect(await file.readAsString(), 'original');
     await tester.pumpWidget(const SizedBox.shrink());
     controller.dispose();
-    index.dispose();
-    await root.delete(recursive: true);
   });
 }

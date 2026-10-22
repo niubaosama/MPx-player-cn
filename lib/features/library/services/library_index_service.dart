@@ -126,8 +126,9 @@ class LibraryIndexService extends ChangeNotifier {
 
   Future<void> invalidate(String rootPath) async {
     rootPath = p.normalize(rootPath);
-    final active = _inFlight[rootPath];
-    if (active != null) await active;
+    while (_inFlight[rootPath] != null) {
+      await _inFlight[rootPath];
+    }
     _snapshots.remove(rootPath);
     await _db.removeLibraryIndexCache(rootPath);
     notifyListeners();
@@ -141,8 +142,9 @@ class LibraryIndexService extends ChangeNotifier {
   Future<void> updateIndexIncremental(String rootPath, String dirPath) async {
     rootPath = p.normalize(rootPath);
     dirPath = p.normalize(dirPath);
-    final active = _inFlight[rootPath];
-    if (active != null) await active;
+    while (_inFlight[rootPath] != null) {
+      await _inFlight[rootPath];
+    }
     final old = _snapshots[rootPath];
     if (old == null) {
       await ensureIndexed(rootPath);
@@ -266,6 +268,15 @@ class LibraryIndexService extends ChangeNotifier {
 
   void _publish(String rootPath, LibraryIndexSnapshot snapshot) {
     _snapshots[rootPath] = snapshot;
+    if (snapshot.isComplete) {
+      for (final entry in _snapshots.entries.toList()) {
+        if (entry.value.isComplete && p.isWithin(entry.key, rootPath)) {
+          final merged = entry.value.videos.where((v) => !p.isWithin(rootPath, v.path)).toList()
+            ..addAll(snapshot.videos);
+          _snapshots[entry.key] = _snapshot(entry.key, merged, snapshot.indexedAt);
+        }
+      }
+    }
     notifyListeners();
   }
 
