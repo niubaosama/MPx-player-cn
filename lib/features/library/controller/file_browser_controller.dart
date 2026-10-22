@@ -179,7 +179,9 @@ class FileBrowserController extends ChangeNotifier {
     final revision = ++_visibilityRevision;
     final items = _prepareVisibleItems(_directoryItems);
     unawaited(sortFileItemsIsolate(items, _sortBy, _sortOrder).then((sorted) {
-      if (_disposed || path != _currentPath || revision != _visibilityRevision) {
+      if (_disposed ||
+          path != _currentPath ||
+          revision != _visibilityRevision) {
         return;
       }
       _items = sorted;
