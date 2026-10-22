@@ -143,21 +143,24 @@ class _ReelsContentState extends State<_ReelsContent> with WidgetsBindingObserve
           child: Row(children: [
             if (widget.standalone) IconButton(onPressed: () => _leave(controller),
               icon: const Icon(Icons.arrow_back, color: Colors.white))
-            else PopupMenuButton<ReelsSourceMode>(
+            else PopupMenuButton<Object>(
               initialValue: controller.sourceMode, enabled: !controller.isLoading,
               tooltip: context.tr('Video source'),
-              onSelected: controller.setSourceMode,
+              onSelected: (value) {
+                if (value is ReelsSourceMode) { controller.setSourceMode(value); }
+                if (value == 'sources') { _sources(controller); }
+              },
               icon: const Icon(Icons.video_library_outlined, color: Colors.white),
               itemBuilder: (_) => [
                 PopupMenuItem(value: ReelsSourceMode.folders, child: Text(context.tr('Folder sources'))),
                 PopupMenuItem(value: ReelsSourceMode.localRandom, child: Text(context.tr('Random local videos'))),
+                const PopupMenuDivider(),
+                PopupMenuItem(value: 'sources', child: Text(context.tr('Manage sources'))),
               ]),
             if (!widget.standalone) Expanded(child: Text(context.tr(controller.sourceMode == ReelsSourceMode.localRandom
               ? 'Random local videos' : 'Folder sources'), maxLines: 1, overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white70))),
             if (widget.standalone) const Spacer(),
-            if (!widget.standalone) IconButton(tooltip: context.tr('Manage sources'),
-              onPressed: () => _sources(controller), icon: const Icon(Icons.folder_open, color: Colors.white)),
             IconButton(tooltip: context.tr('Normal playback'), onPressed: () => _openNormal(controller),
               icon: const Icon(Icons.open_in_full, color: Colors.white)),
             IconButton(tooltip: context.tr('Mute'), onPressed: controller.toggleMute,
