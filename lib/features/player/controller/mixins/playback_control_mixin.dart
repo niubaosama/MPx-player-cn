@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import '../../../history/services/history_service.dart';
 import '../../../library/domain/entities/video_file.dart';
 import '../../domain/repositories/player_repository.dart';

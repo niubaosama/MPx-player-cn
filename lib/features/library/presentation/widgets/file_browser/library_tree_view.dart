@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mpx/core/l10n/app_localizations.dart';
 import '../../../../../core/theme/app_theme_tokens.dart';
 import '../../../data/datasources/directory_browser.dart';
 import '../../../domain/entities/file_item.dart';

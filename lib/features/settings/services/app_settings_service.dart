@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_mpv/flutter_mpv.dart';
 import 'package:mpx/core/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';

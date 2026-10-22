@@ -28,7 +28,7 @@ class OverlayLayer extends StatelessWidget {
               _buildSpeedIndicator(),
               _buildVolumeIndicator(context),
               _buildBrightnessIndicator(context),
-              _buildSeekIndicator(),
+              _buildSeekIndicator(context),
               _buildBufferingIndicator(),
               _buildLockedIndicator(),
             ],
@@ -137,7 +137,7 @@ class OverlayLayer extends StatelessWidget {
     );
   }
 
-  Widget _buildSeekIndicator() {
+  Widget _buildSeekIndicator(BuildContext context) {
     final progress = controller.duration.inMilliseconds > 0
         ? controller.position.inMilliseconds /
             controller.duration.inMilliseconds

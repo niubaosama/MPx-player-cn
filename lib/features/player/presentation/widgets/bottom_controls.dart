@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mpx/core/l10n/app_localizations.dart';
 
 class BottomControls extends StatefulWidget {
   final Duration position;
@@ -59,11 +58,11 @@ class _BottomControlsState extends State<BottomControls> {
 
   IconData _aspectRatioIcon(String label) {
     switch (label) {
-      case context.tr('Fit'):
+      case 'Fit':
         return Icons.fit_screen_outlined;
-      case context.tr('Fill'):
+      case 'Fill':
         return Icons.crop_square_outlined;
-      case context.tr('Stretch'):
+      case 'Stretch':
         return Icons.aspect_ratio_outlined;
       case '16:9':
         return Icons.stay_current_landscape_outlined;
