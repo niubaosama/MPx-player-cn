@@ -6,6 +6,21 @@
 
 > **请使用 [`cn-full-player` 分支](https://github.com/niubaosama/MPx-player-cn/tree/cn-full-player)。** 中文版基于上游完整版提交 [`9e644a1`](https://github.com/mohammedbakri123/MPx-player/commit/9e644a1daa986f85dc30c2ebedc4110a7bb89d6f) 继续维护，与上游后续的 v3 重写版分开演进。查看其他分支时，功能和构建方式可能不同。
 
+## 下载安装
+
+**[直接下载 MPx 中文版 2.3.0 APK](https://github.com/niubaosama/MPx-player-cn/releases/download/v2.3.0-cn/MPx-player-cn-2.3.0-arm64.apk)** · [发布说明与附件](https://github.com/niubaosama/MPx-player-cn/releases/tag/v2.3.0-cn)
+
+- 已签名安装包，约 68 MB，下载后即可安装，无需自行构建。
+- 适用于 Android 7.0 及以上的 ARM64 设备，可与原版共存。
+- 当前为预览版，自动化测试及构建、签名验证已完成，本轮实机回归仍待完成。
+- 在发布页下载时，选择 Assets 下的 `MPx-player-cn-2.3.0-arm64.apk`；`Source code` 附件是源码，不能直接安装。
+
+APK SHA-256：
+
+```text
+7b5f8d8cfe941af571853e7a31be4038195b7d2c18a87ae03dbbdc75d6dea532
+```
+
 ## 当前版本
 
 | 项目 | 说明 |
@@ -80,7 +95,7 @@
 
 ## 安装与开始使用
 
-1. 安装已签名的中文版 APK。当前提供的构建目标为 ARM64，32 位设备不适用。
+1. 从 [Releases](https://github.com/niubaosama/MPx-player-cn/releases/tag/v2.3.0-cn) 下载并安装已签名的中文版 APK。当前提供的构建目标为 ARM64，32 位设备不适用。
 2. 首次打开时，按系统提示授予读取视频所需的权限。中文版是独立应用，需要重新授权。
 3. 在设置中选择应用语言；进入短视频后，可通过来源菜单选择“文件夹来源”或“随机本机”。
 4. 使用文件夹来源时，添加需要浏览的文件夹，并按需要开启“包含子文件夹”。视频保持在原位置。
